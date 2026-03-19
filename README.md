@@ -2,6 +2,10 @@
 
 A modern, portfolio-grade AI voice chat application built with Next.js 14, featuring real-time speech-to-text, AI-powered conversations, and text-to-speech capabilities.
 
+## 🌐 Live Demo
+
+**[🚀 Try it Live](https://aichatbydivyesh.vercel.app)**
+
 ![NOVA AI Chat](https://img.shields.io/badge/Next.js-14.2.5-black?style=for-the-badge&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue?style=for-the-badge&logo=typescript)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.1-38B2AC?style=for-the-badge&logo=tailwind-css)

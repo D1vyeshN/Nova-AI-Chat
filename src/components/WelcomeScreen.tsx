@@ -42,7 +42,7 @@ export function WelcomeScreen({ onChipClick }: Props) {
           Hello, I&apos;m NOVA
         </h2>
         <p className="font-mono text-xs text-nova-muted max-w-xs leading-relaxed">
-          Your AI voice assistant. Type or use the mic to speak. Add your Groq key to get started.
+          Your AI voice assistant. Type or use the mic to speak.
         </p>
       </div>
 
