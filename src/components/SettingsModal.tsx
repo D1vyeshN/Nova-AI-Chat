@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Modal, Input, Form, Typography, Tag, Space, Alert, Select, Spin, Button } from "antd";
-import { KeyOutlined, ApiOutlined, SoundOutlined } from "@ant-design/icons";
+import { Modal, Input, Form, Typography, Tag, Space, Alert, Select, Spin, Button, message } from "antd";
+import { KeyOutlined, ApiOutlined, SoundOutlined, SettingOutlined } from "@ant-design/icons";
 import { ApiKeys, Voice } from "@/types";
 
 const { Text, Link } = Typography;
@@ -15,7 +15,7 @@ interface Props {
   onCancel: () => void;
 }
 
-export function ApiKeyModal({ open, initialKeys, onSave, onCancel }: Props) {
+export function SettingsModal({ open, initialKeys, onSave, onCancel }: Props) {
   const [form] = Form.useForm();
   const [voices, setVoices] = useState<Voice[]>([]);
   const [loadingVoices, setLoadingVoices] = useState(false);
@@ -28,6 +28,7 @@ export function ApiKeyModal({ open, initialKeys, onSave, onCancel }: Props) {
         elevenlabs: values.elevenlabs || "",
         selectedVoice: selectedVoice
       });
+      message.success("Settings saved successfully!");
     });
   };
 
@@ -42,9 +43,11 @@ export function ApiKeyModal({ open, initialKeys, onSave, onCancel }: Props) {
       const data = await response.json();
       if (data.voices) {
         setVoices(data.voices);
+        message.success("English voices loaded!");
       }
     } catch (error) {
       console.error('Failed to fetch voices:', error);
+      message.error("Failed to load voices");
     } finally {
       setLoadingVoices(false);
     }
@@ -60,11 +63,20 @@ export function ApiKeyModal({ open, initialKeys, onSave, onCancel }: Props) {
       const data = await response.json();
       if (data.voices) {
         setVoices(data.voices);
+        message.success("All voices loaded!");
       }
     } catch (error) {
       console.error('Failed to fetch all voices:', error);
+      message.error("Failed to load voices");
     } finally {
       setLoadingVoices(false);
+    }
+  };
+
+  // Load voices when modal opens
+  const handleAfterChange = (visible: boolean) => {
+    if (visible && voices.length === 0) {
+      fetchVoices(); // Auto-load English voices when modal opens
     }
   };
 
@@ -73,12 +85,13 @@ export function ApiKeyModal({ open, initialKeys, onSave, onCancel }: Props) {
       open={open}
       onOk={handleOk}
       onCancel={onCancel}
-      okText="Save Keys"
+      okText="Save Settings"
       cancelText="Cancel"
+      afterOpenChange={handleAfterChange}
       title={
         <Space>
-          <KeyOutlined style={{ color: "#00e5ff" }} />
-          <span style={{ color: "#e8eaf0" }}>Configure API Keys</span>
+          <SettingOutlined style={{ color: "#00e5ff" }} />
+          <span style={{ color: "#e8eaf0" }}>Settings</span>
         </Space>
       }
       styles={{
@@ -87,10 +100,11 @@ export function ApiKeyModal({ open, initialKeys, onSave, onCancel }: Props) {
         footer: { background: "#0e1117", borderTop: "1px solid #1e2530" },
         mask: { backdropFilter: "blur(4px)" },
       }}
+      width={600}
     >
       <div className="py-4 space-y-4">
         <Alert
-          message="Keys are stored in your browser only — never sent to any server except the respective APIs."
+          message="Settings are stored in your browser locally and never sent to any server except the respective APIs."
           type="info"
           showIcon
           style={{ background: "rgba(0,229,255,0.05)", border: "1px solid rgba(0,229,255,0.2)" }}

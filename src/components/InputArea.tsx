@@ -169,8 +169,8 @@ export function InputArea({
 
   return (
     <div
-      className="border-t border-nova-border px-4 md:px-8 py-4 pb-10 "
-      style={{ background: "rgba(8,11,15,0.95)", backdropFilter: "blur(20px)" }}
+      className="px-4 md:px-8 py-2 pb-8"
+      // style={{ background: "rgba(8,11,15,0.95)", backdropFilter: "blur(20px)" }}
     >
       <div className="flex gap-2 items-end h-full">
         {/* ── input area — switches between textarea and waveform ── */}
@@ -228,6 +228,9 @@ export function InputArea({
           </div>
         </div>
       </div>
+      <p className="text-center text-[10px] leading-[14px] md:text-xs text-nova-muted mt-2">
+        Press Enter to send, Shift+Enter for new line, Ai can make mistakes.
+      </p>
     </div>
   );
 }

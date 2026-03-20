@@ -9,11 +9,14 @@ import {
   CheckOutlined,
   CopyOutlined,
   LoadingOutlined,
+  EditOutlined,
+  CloseOutlined,
 } from "@ant-design/icons";
 import { Message } from "@/types";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { Input } from "antd";
 
 // Language code to name mapping
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -68,6 +71,9 @@ interface Props {
   isStreaming: boolean;
   onSpeak: (text: string, id: string) => void;
   streamingDomRef: React.MutableRefObject<HTMLSpanElement | null>;
+  onEditMessage?: (messageId: string, isEditing: boolean) => void;
+  onUpdateMessage?: (messageId: string, newContent: string) => void;
+  onRegenerateResponse?: (messageId: string) => Promise<Message | null>;
 }
 
 export function MessageBubble({
@@ -77,6 +83,9 @@ export function MessageBubble({
   isStreaming: messageStreaming,
   onSpeak,
   streamingDomRef,
+  onEditMessage,
+  onUpdateMessage,
+  onRegenerateResponse,
 }: Props) {
   const spanRef = useRef<HTMLSpanElement>(null);
 
@@ -84,11 +93,45 @@ export function MessageBubble({
   const isError = message.content.startsWith("⚠️");
 
   const [copied, setCopied] = useState(false);
+  const [editText, setEditText] = useState(message.content);
+  const textAreaRef = useRef<any>(null);
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleEdit = () => {
+    setEditText(message.content);
+    onEditMessage?.(message.id, true);
+    setTimeout(() => textAreaRef.current?.focus(), 0);
+  };
+
+  const handleSaveEdit = async () => {
+    if (editText.trim() && editText !== message.content) {
+      // Then update the message content
+      onUpdateMessage?.(message.id, editText.trim());
+      // First trigger regeneration of AI response for user messages
+      if (message.role === "user" && onRegenerateResponse) {
+        await onRegenerateResponse(message.id);
+      }
+    }
+    onEditMessage?.(message.id, false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditText(message.content);
+    onEditMessage?.(message.id, false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === "Escape") {
+      handleCancelEdit();
+    }
   };
 
   // Sync streaming content when message content changes
@@ -145,7 +188,7 @@ export function MessageBubble({
         {/* Bubble */}
         <div
           className={clsx(
-            "p-1 rounded-xl text-sm leading-relaxed",
+            "rounded-xl text-sm leading-relaxed",
             isAI ? "bg-transparent border-0 pt-0" : "rounded-tr-sm",
             isError && "border-red-500/30 bg-red-500/5",
           )}
@@ -160,8 +203,8 @@ export function MessageBubble({
         >
           <div
             className={clsx(
-              "px-4 py-2 rounded-xl text-sm leading-relaxed",
-              isAI ? "bg-transparent border-0 pt-0" : "border rounded-tr-sm",
+              "flex items-center px-2 py-2 rounded-xl text-sm leading-relaxed",
+              isAI ? "bg-transparent border-0 pt-0 px-0 md:px-2" : "border rounded-br-sm md:mr-2 px-4 w-fit",
               isError && "border-red-500/30 bg-red-500/5",
             )}
             style={
@@ -175,7 +218,33 @@ export function MessageBubble({
           >
             {/* <p className="text-nova-text whitespace-pre-wrap">{displayContent}</p> */}
             {/* ✅ span is the direct DOM write target during stream */}
-            {messageStreaming ? (
+            {message.isEditing ? (
+              <textarea
+                ref={textAreaRef}
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                onKeyDown={handleKeyDown}
+                rows={1}
+                placeholder="Edit your message..."
+                // className="bg-nova-surface border-nova-border text-nova-text"
+                // style={{
+                //   background: "#0e1117",
+                //   borderColor: "#1e2530",
+                //   color: "#e8eaf0",
+                // }}
+                className="w-full h-full bg-transparent border-none outline-none resize-none disabled:opacity-50"
+              style={{
+                color: "#e8eaf0",
+                fontFamily: "'Syne', sans-serif",
+                fontSize: 14,
+                padding: "0px 0px",
+                // lineHeight: "1.5",
+                minHeight: "22px",
+                maxHeight: "260px",
+              }}
+              
+              />
+            ) : messageStreaming ? (
               // During stream: still write directly to DOM for perf,
               // but wrap in markdown on final commit
               <span ref={spanRef} style={{ whiteSpace: "pre-wrap" }} />
@@ -186,55 +255,87 @@ export function MessageBubble({
             {messageStreaming && <span className="streaming-cursor" />}
           </div>
 
-          {/* TTS button for AI messages */}
+          {/* Action buttons */}
           <div
-            className={`flex ${isAI ? "" : "justify-end"} gap-2 mt-2 border-t border-nova-border/50`}
+            className={`flex ${isAI ? "" : "justify-end"} gap-2 mt-2 `}
           >
-            {isAI && !isError && (
+            {message.isEditing ? (
               <>
-                {/* OpenAI Edge TTS Streaming Button */}
-                <Tooltip title={isPlaying ? "Stop speaking" : "Play voice (AI streaming)"} placement="bottom">
+                <Tooltip title="Save (Enter)" placement="bottom">
                   <Button
                     size="small"
                     type="text"
-                    icon={
-                      isLoading ? (
-                        <LoadingOutlined spin />
-                      ) : isPlaying ? (
-                        <PauseOutlined />
-                      ) : (
-                        <SoundOutlined />
-                      )
-                    }
-                    onClick={() => onSpeak(message.content, message.id)}
+                    icon={<CheckOutlined />}
+                    onClick={handleSaveEdit}
+                    className="font-mono text-[10px] h-6 flex items-center gap-1 transition-all text-green-400 hover:text-green-300"
+                  />
+                </Tooltip>
+                <Tooltip title="Cancel (Esc)" placement="bottom">
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={<CloseOutlined />}
+                    onClick={handleCancelEdit}
+                    className="font-mono text-[10px] h-6 flex items-center gap-1 transition-all text-red-400 hover:text-red-300"
+                  />
+                </Tooltip>
+              </>
+            ) : (
+              <>
+                {isAI && !isError && (
+                  <Tooltip title={isPlaying ? "Stop speaking" : "Play voice"} placement="bottom">
+                    <Button
+                      size="small"
+                      type="text"
+                      icon={
+                        isLoading ? (
+                          <LoadingOutlined spin />
+                        ) : isPlaying ? (
+                          <PauseOutlined />
+                        ) : (
+                          <SoundOutlined />
+                        )
+                      }
+                      onClick={() => onSpeak(message.content, message.id)}
+                      className={clsx(
+                        "font-mono text-[10px] h-6 flex items-center gap-1 transition-all",
+                        isLoading
+                          ? "text-purple-400 border-purple-500/30 bg-purple-500/10"
+                          : isPlaying
+                          ? "text-blue-400 border-blue-500/30 bg-blue-500/10"
+                          : "text-nova-muted hover:text-blue-400 hover:border-blue-500/30 hover:bg-blue-500/10",
+                      )}
+                      style={{ borderColor: isPlaying || isLoading ? undefined : "transparent" }}
+                    />
+                  </Tooltip>
+                )}
+                {!isAI && (
+                  <Tooltip title="Edit message" placement="bottom">
+                    <Button
+                      size="small"
+                      type="text"
+                      icon={<EditOutlined />}
+                      onClick={handleEdit}
+                      className="font-mono text-[10px] h-6 flex items-center gap-1 transition-all text-nova-muted hover:text-yellow-400 hover:border-yellow-500/30 hover:bg-yellow-500/10"
+                      style={{ borderColor: "transparent" }}
+                    />
+                  </Tooltip>
+                )}
+                <Tooltip title={copied ? "✓ Copied" : "Copy"} placement="bottom">
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={copied ? <CheckOutlined /> : <CopyOutlined />}
+                    onClick={handleCopy}
                     className={clsx(
                       "font-mono text-[10px] h-6 flex items-center gap-1 transition-all",
-                      isLoading
-                        ? "text-purple-400 border-purple-500/30 bg-purple-500/10"
-                        : isPlaying
-                        ? "text-blue-400 border-blue-500/30 bg-blue-500/10"
-                        : "text-nova-muted hover:text-blue-400 hover:border-blue-500/30 hover:bg-blue-500/10",
+                      "text-nova-muted hover:text-purple-400 hover:border-purple-500/30 hover:bg-purple-500/10",
                     )}
-                    style={{ borderColor: isPlaying || isLoading ? undefined : "transparent" }}
+                    style={{ borderColor: isPlaying ? undefined : "transparent" }}
                   />
                 </Tooltip>
               </>
             )}
-            <Tooltip title={copied ? "✓ Copied" : "Copy"} placement="bottom">
-              <Button
-                size="small"
-                type="text"
-                icon={copied ? <CheckOutlined /> : <CopyOutlined />}
-                onClick={handleCopy}
-                className={clsx(
-                  "font-mono text-[10px] h-6 flex items-center gap-1 transition-all",
-                  "text-nova-muted hover:text-purple-400 hover:border-purple-500/30 hover:bg-purple-500/10",
-                )}
-                style={{ borderColor: isPlaying ? undefined : "transparent" }}
-              >
-                {/* {copied ? "✓ Copied" : "Copy"} */}
-              </Button>
-            </Tooltip>
           </div>
         </div>
       </div>

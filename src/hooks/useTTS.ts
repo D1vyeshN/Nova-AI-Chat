@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { Voice } from "@/types";
 
 // ── strip everything except plain speakable text ──────────────────────────────
 function stripToSpeakable(text: string): string {
@@ -63,7 +64,7 @@ function stripToSpeakable(text: string): string {
   );
 }
 
-export function useTTS() {
+export function useTTS(selectedVoice?: Voice) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -113,7 +114,7 @@ export function useTTS() {
           },
           body: JSON.stringify({
             input: clean,
-            voice: 'nova',
+            voice: selectedVoice?.name || 'en-US-AvaMultilingualNeural',
             response_format: 'mp3',
             speed: 1.0
           })

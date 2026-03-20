@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export interface Voice {
+  name: string;
+  language: string;
+  gender: "Male" | "Female";
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { input, voice = 'en-US-AnaNeural', response_format = 'mp3', speed = 1.0 } = body;
+    const { locale = "en-US" } = body;
 
     // Get API configuration from environment variables
     const ttsUrl = process.env.TTS_URL || 'https://openai-edge-tts-uzqw.onrender.com';
@@ -16,55 +22,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Direct audio playback request (no SSE streaming)
-    const response = await fetch(`${ttsUrl}/v1/audio/speech`, {
+    // Fetch voices for specific locale
+    const response = await fetch(`${ttsUrl}/v1/voices`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${ttsKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        input,
-        voice,
-        response_format,
-        speed
-      })
+      body: JSON.stringify({ locale })
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI Edge TTS API error:', response.status, errorText);
+      console.error('OpenAI Edge TTS Voices API error:', response.status, errorText);
       return NextResponse.json(
-        { error: `TTS API error: ${response.status}` },
+        { error: `Voices API error: ${response.status}` },
         { status: response.status }
       );
     }
 
-    // Stream the audio directly back to client
-    if (!response.body) {
-      return NextResponse.json(
-        { error: 'No response body from TTS API' },
-        { status: 500 }
-      );
-    }
-
-    // Create a new response with the same headers and body for direct audio streaming
-    const headers = new Headers({
-      'Content-Type': 'audio/mpeg',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    });
-
-    return new Response(response.body, {
-      status: response.status,
-      headers,
-    });
+    const data = await response.json();
+    return NextResponse.json(data);
 
   } catch (error) {
-    console.error('TTS proxy error:', error);
+    console.error('Voices proxy error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

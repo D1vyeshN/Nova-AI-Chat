@@ -16,6 +16,7 @@ import {
   DeleteOutlined,
   StopOutlined,
   LoadingOutlined,
+  SettingOutlined,
 } from "@ant-design/icons";
 import clsx from "clsx";
 
@@ -23,10 +24,12 @@ import { AppStatus } from "@/types";
 import { useChat } from "@/hooks/useChat";
 import { useSTT } from "@/hooks/useSTT";
 import { useTTS } from "@/hooks/useTTS";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { MessageBubble } from "@/components/MessageBubble";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { InputArea } from "@/components/InputArea";
+import { VoiceSelectionModal } from "@/components/VoiceSelectionModal";
 
 const { TextArea } = Input;
 
@@ -34,6 +37,9 @@ export default function ChatPage() {
   const [inputText, setInputText] = useState("");
   const [api, contextHolder] = notification.useNotification();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+
+  const { selectedVoice, updateVoice, isLoaded } = useLocalStorage();
 
   const {
     messages,
@@ -44,6 +50,9 @@ export default function ChatPage() {
     stopStreaming,
     isStreaming,
     streamingDomRef,
+    updateMessage,
+    editMessage,
+    regenerateResponse,
   } = useChat();
   const { isRecording, isTranscribing, startRecording, stopRecording } =
     useSTT();
@@ -54,7 +63,7 @@ export default function ChatPage() {
     isVoiceStreaming,
     speak, 
     stop
-  } = useTTS();
+  } = useTTS(selectedVoice);
 
   // Auto-scroll
   useEffect(() => {
@@ -75,6 +84,7 @@ export default function ChatPage() {
     }
   };
 
+  console.log(messages,"messages");
   const handleMic = async () => {
     if (isRecording) {
       try {
@@ -192,6 +202,15 @@ export default function ChatPage() {
             </div>
 
             {/* Action buttons */}
+            <Tooltip title="Settings">
+              <Button
+                type="text"
+                size="small"
+                icon={<SettingOutlined />}
+                onClick={() => setSettingsModalOpen(true)}
+                style={{ color: "#5a6478" }}
+              />
+            </Tooltip>
             <Tooltip title="Clear chat">
               <Button
                 type="text"
@@ -210,11 +229,11 @@ export default function ChatPage() {
         </header>
 
         {/* ===== MAIN CONTENT ===== */}
-        <div className="flex-1 flex justify-center px-4 relative z-10 max-h-[calc(100vh-60px)]">
+        <div className="flex-1 flex justify-center relative z-10 max-h-[calc(100vh-60px)]">
           <div className="w-full max-w-4xl flex flex-col h-full">
             {/* ===== MESSAGES ===== */}
             <div
-              className="flex-1 overflow-y-auto px-4 md:px-8 py-6 space-y-4 relative z-1 scroll-smooth"
+              className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-4 relative z-1 scroll-smooth"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "#1e2530 transparent",
@@ -240,6 +259,9 @@ export default function ChatPage() {
                         isPlaying={playingId === msg.id}
                         isLoading={isVoiceStreaming && playingId === msg.id}
                         onSpeak={speak}
+                        onEditMessage={editMessage}
+                        onUpdateMessage={updateMessage}
+                        onRegenerateResponse={regenerateResponse}
                       />
                     );
                   })}
@@ -264,6 +286,14 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+
+      {/* ===== VOICE SELECTION MODAL ===== */}
+      <VoiceSelectionModal
+        open={settingsModalOpen}
+        initialVoice={selectedVoice}
+        onSave={updateVoice}
+        onCancel={() => setSettingsModalOpen(false)}
+      />
     </ConfigProvider>
   );
 }
