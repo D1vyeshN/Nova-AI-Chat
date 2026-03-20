@@ -1,9 +1,6 @@
+import { Voice } from "@/types";
 
-export type Voice = {
-    gender: string;
-    language: string;
-    name: string;
-}
+export type { Voice };
 
 export const allVoices: Voice[] = [
   {

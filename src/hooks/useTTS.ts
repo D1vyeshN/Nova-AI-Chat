@@ -1,14 +1,19 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import { loadModule } from "cld3-asm";
 import { Voice } from "@/types";
+import { allVoices } from "@/utils/voices";
 
 // ── strip everything except plain speakable text ──────────────────────────────
 function stripToSpeakable(text: string): string {
   return (
     text
       // fenced code blocks — replace with placeholder
-      .replace(/```[\s\S]*?```/g, "you can see the code in the conversation history")
+      .replace(
+        /```[\s\S]*?```/g,
+        "you can see the code in the conversation history",
+      )
       // inline code — keep the word
       .replace(/`([^`]+)`/g, "$1")
       // headings
@@ -20,7 +25,10 @@ function stripToSpeakable(text: string): string {
       // links — keep label only
       .replace(/\[(.+?)\]\(.+?\)/g, "$1")
       // images — replace with placeholder
-      .replace(/!\[.*?\]\(.*?\)/g, "you can see the image in the conversation history")
+      .replace(
+        /!\[.*?\]\(.*?\)/g,
+        "you can see the image in the conversation history",
+      )
       // blockquotes
       .replace(/^>\s*/gm, "")
       // horizontal rules
@@ -43,12 +51,12 @@ function stripToSpeakable(text: string): string {
       .replace(/[\u{1F900}-\u{1F9FF}]/gu, "") // supplemental symbols
       .replace(/[\u{1FA00}-\u{1FA6F}]/gu, "") // chess symbols
       .replace(/[\u{1FA70}-\u{1FAFF}]/gu, "") // symbols and pictographs extended
-      .replace(/[\u{2600}-\u{26FF}]/gu, "")   // misc symbols ☀️ ⚡
-      .replace(/[\u{2700}-\u{27BF}]/gu, "")   // dingbats
-      .replace(/[\u{FE00}-\u{FE0F}]/gu, "")   // variation selectors
+      .replace(/[\u{2600}-\u{26FF}]/gu, "") // misc symbols ☀️ ⚡
+      .replace(/[\u{2700}-\u{27BF}]/gu, "") // dingbats
+      .replace(/[\u{FE00}-\u{FE0F}]/gu, "") // variation selectors
       .replace(/[\u{1F1E0}-\u{1F1FF}]/gu, "") // flags
-      .replace(/\u{200D}/gu, "")              // zero width joiner
-      .replace(/\u{FE0F}/gu, "")              // variation selector-16
+      .replace(/\u{200D}/gu, "") // zero width joiner
+      .replace(/\u{FE0F}/gu, "") // variation selector-16
       // special chars not useful in speech
       .replace(/[#*_~`^\\]/g, "")
       // html entities
@@ -96,6 +104,12 @@ export function useTTS(selectedVoice?: Voice) {
       const clean = stripToSpeakable(text);
       if (!clean) return;
 
+      const cldFactory = await loadModule();
+      const identifier = cldFactory.create();
+      // const result = identifier.findLanguage(clean);
+      const result = identifier.findMostFrequentLanguages(clean,2);
+      const detectedVoice = allVoices.find((v) => v.language.startsWith(result?.[0]?.language));
+      
       // Stop any existing audio
       stop();
 
@@ -107,17 +121,17 @@ export function useTTS(selectedVoice?: Voice) {
       setPlayingId(messageId);
 
       try {
-        const response = await fetch('/api/tts', {
-          method: 'POST',
+        const response = await fetch("/api/tts", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             input: clean,
-            voice: selectedVoice?.name || 'en-US-AvaMultilingualNeural',
-            response_format: 'mp3',
-            speed: 1.0
-          })
+            voice: detectedVoice?.name || "en-US-AvaMultilingualNeural",
+            response_format: "mp3",
+            speed: 1.0,
+          }),
         });
 
         if (!response.ok) {
@@ -125,38 +139,37 @@ export function useTTS(selectedVoice?: Voice) {
         }
 
         if (!response.body) {
-          throw new Error('No response body from TTS API');
+          throw new Error("No response body from TTS API");
         }
 
         // Create audio from direct stream
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
-        
+
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
-        
+
         audio.onended = () => {
           stop();
           URL.revokeObjectURL(audioUrl);
         };
-        
+
         audio.onerror = () => {
           stop();
           URL.revokeObjectURL(audioUrl);
         };
-        
+
         setIsLoading(false);
         await audio.play();
-
       } catch (error) {
-        console.error('OpenAI Edge TTS error:', error);
+        console.error("OpenAI Edge TTS error:", error);
         stop();
       } finally {
         setIsLoading(false);
         setIsVoiceStreaming(false);
       }
     },
-    [stop]
+    [stop],
   );
 
   // ── Main speak function (uses OpenAI Edge TTS) ──────────────────────────
@@ -167,22 +180,22 @@ export function useTTS(selectedVoice?: Voice) {
         stop();
         return;
       }
-      
+
       const clean = stripToSpeakable(text);
       if (!clean) return;
 
       // Use OpenAI Edge TTS
       await speakWithOpenAI(clean, messageId);
     },
-    [stop, speakWithOpenAI]
+    [stop, speakWithOpenAI],
   );
 
-  return { 
-    isSpeaking, 
-    playingId, 
-    speak, 
-    stop, 
+  return {
+    isSpeaking,
+    playingId,
+    speak,
+    stop,
     isLoading,
-    isVoiceStreaming
+    isVoiceStreaming,
   };
 }
