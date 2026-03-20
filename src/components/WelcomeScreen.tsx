@@ -59,11 +59,6 @@ export function WelcomeScreen({ onChipClick }: Props) {
         ))}
       </div>
 
-      <div className="flex gap-3 mt-2">
-        <Tag color="cyan" className="font-mono text-[10px]">Groq STT</Tag>
-        <Tag color="purple" className="font-mono text-[10px]">ElevenLabs TTS</Tag>
-        <Tag color="green" className="font-mono text-[10px]">LLaMA 3.3 70B</Tag>
-      </div>
     </div>
   );
 }

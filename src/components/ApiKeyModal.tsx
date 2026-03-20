@@ -84,7 +84,7 @@ export function ApiKeyModal({ open, initialKeys, onSave, onCancel }: Props) {
           >
             <Input.Password
               prefix={<ApiOutlined style={{ color: "#5a6478" }} />}
-              placeholder="sk_... (leave empty to use browser voice)"
+              placeholder="sk_... (optional premium voice)"
               style={{ background: "#141820", borderColor: "#1e2530", color: "#e8eaf0" }}
             />
           </Form.Item>

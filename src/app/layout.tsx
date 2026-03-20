@@ -19,7 +19,7 @@ const dmMono = DM_Mono({
 
 export const metadata: Metadata = {
   title: "NOVA — AI Voice Chat",
-  description: "AI voice assistant with Groq STT, LLaMA chat, and ElevenLabs TTS",
+  description: "AI voice assistant with Groq STT, LLaMA chat, and Web Speech TTS",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

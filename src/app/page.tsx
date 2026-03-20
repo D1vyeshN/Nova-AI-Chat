@@ -25,7 +25,6 @@ import { useSTT } from "@/hooks/useSTT";
 import { useTTS } from "@/hooks/useTTS";
 import { MessageBubble } from "@/components/MessageBubble";
 import { TypingIndicator } from "@/components/TypingIndicator";
-import { VoiceVisualizer } from "@/components/VoiceVisualizer";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { InputArea } from "@/components/InputArea";
 
@@ -48,7 +47,14 @@ export default function ChatPage() {
   } = useChat();
   const { isRecording, isTranscribing, startRecording, stopRecording } =
     useSTT();
-  const { isSpeaking, playingId, speak,stop } = useTTS();
+  const { 
+    isSpeaking, 
+    playingId, 
+    isLoading,
+    isVoiceStreaming,
+    speak, 
+    stop
+  } = useTTS();
 
   // Auto-scroll
   useEffect(() => {
@@ -224,16 +230,19 @@ export default function ChatPage() {
                 />
               ) : (
                 <>
-                  {messages.map((msg, index) => (
-                    <MessageBubble
-                      key={msg.id}
-                      message={msg}
-                      isStreaming={isStreaming && index === messages.length - 1}
-                      streamingDomRef={streamingDomRef}
-                      isPlaying={playingId === msg.id}
-                      onSpeak={speak}
-                    />
-                  ))}
+                  {messages.map((msg, index) => {
+                    return (
+                      <MessageBubble
+                        key={msg.id}
+                        message={msg}
+                        isStreaming={isStreaming && index === messages.length - 1}
+                        streamingDomRef={streamingDomRef}
+                        isPlaying={playingId === msg.id}
+                        isLoading={isVoiceStreaming && playingId === msg.id}
+                        onSpeak={speak}
+                      />
+                    );
+                  })}
                   {isBusy && <TypingIndicator />}
                 </>
               )}

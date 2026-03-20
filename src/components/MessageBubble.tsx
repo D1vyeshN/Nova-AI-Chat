@@ -8,25 +8,74 @@ import {
   UserOutlined,
   CheckOutlined,
   CopyOutlined,
+  LoadingOutlined,
 } from "@ant-design/icons";
 import { Message } from "@/types";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 
+// Language code to name mapping
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: "English",
+  // Indian Languages (priority order)
+  hi: "Hindi",
+  bn: "Bengali", 
+  ta: "Tamil",
+  te: "Telugu",
+  mr: "Marathi",
+  gu: "Gujarati",
+  pa: "Punjabi",
+  kn: "Kannada",
+  ml: "Malayalam",
+  or: "Odia",
+  as: "Assamese",
+  // European Languages
+  es: "Spanish", 
+  fr: "French",
+  de: "German",
+  it: "Italian",
+  pt: "Portuguese",
+  ru: "Russian",
+  nl: "Dutch",
+  sv: "Swedish",
+  da: "Danish",
+  no: "Norwegian",
+  pl: "Polish",
+  // Asian Languages
+  zh: "Chinese",
+  ja: "Japanese",
+  ko: "Korean",
+  ar: "Arabic",
+  th: "Thai",
+  vi: "Vietnamese",
+  // Other
+  el: "Greek",
+  he: "Hebrew",
+  tr: "Turkish",
+  fa: "Persian",
+  ur: "Urdu",
+};
+
+function getLanguageName(langCode: string): string {
+  return LANGUAGE_NAMES[langCode] || langCode;
+}
+
 interface Props {
   message: Message;
   isPlaying: boolean;
-  onSpeak: (text: string, id: string) => void;
+  isLoading: boolean;
   isStreaming: boolean;
+  onSpeak: (text: string, id: string) => void;
   streamingDomRef: React.MutableRefObject<HTMLSpanElement | null>;
 }
 
 export function MessageBubble({
   message,
   isPlaying,
+  isLoading,
+  isStreaming: messageStreaming,
   onSpeak,
-  isStreaming,
   streamingDomRef,
 }: Props) {
   const spanRef = useRef<HTMLSpanElement>(null);
@@ -44,7 +93,7 @@ export function MessageBubble({
 
   // Sync streaming content when message content changes
   useEffect(() => {
-    if (isStreaming && spanRef.current) {
+    if (messageStreaming && spanRef.current) {
       // ✅ Register this span as the direct write target
       streamingDomRef.current = spanRef.current;
       // Seed it with whatever content exists already
@@ -56,7 +105,7 @@ export function MessageBubble({
         streamingDomRef.current = null;
       }
     };
-  }, [isStreaming]);
+  }, [messageStreaming, message.content, streamingDomRef]);
 
   const displayContent = isAI && !isError ? "" : message.content;
 
@@ -65,7 +114,6 @@ export function MessageBubble({
     minute: "2-digit",
   });
 
-  console.log("message", message.content);
   return (
     <div
       className={clsx(
@@ -127,7 +175,7 @@ export function MessageBubble({
           >
             {/* <p className="text-nova-text whitespace-pre-wrap">{displayContent}</p> */}
             {/* ✅ span is the direct DOM write target during stream */}
-            {isStreaming ? (
+            {messageStreaming ? (
               // During stream: still write directly to DOM for perf,
               // but wrap in markdown on final commit
               <span ref={spanRef} style={{ whiteSpace: "pre-wrap" }} />
@@ -135,7 +183,7 @@ export function MessageBubble({
               <MarkdownRenderer content={message.content} />
             )}
 
-            {isStreaming && <span className="streaming-cursor" />}
+            {messageStreaming && <span className="streaming-cursor" />}
           </div>
 
           {/* TTS button for AI messages */}
@@ -143,23 +191,34 @@ export function MessageBubble({
             className={`flex ${isAI ? "" : "justify-end"} gap-2 mt-2 border-t border-nova-border/50`}
           >
             {isAI && !isError && (
-              <Tooltip title={isPlaying ? "Stop speaking" : "Play voice"} placement="bottom">
-                <Button
-                  size="small"
-                  type="text"
-                  icon={isPlaying ? <PauseOutlined /> : <SoundOutlined />}
-                  onClick={() => onSpeak(message.content, message.id)}
-                  className={clsx(
-                    "font-mono text-[10px] h-6 flex items-center gap-1 transition-all",
-                    isPlaying
-                      ? "text-purple-400 border-purple-500/30 bg-purple-500/10"
-                      : "text-nova-muted hover:text-purple-400 hover:border-purple-500/30 hover:bg-purple-500/10",
-                  )}
-                  style={{ borderColor: isPlaying ? undefined : "transparent" }}
-                >
-                  {/* {isPlaying ? "Stop" : "Play Voice"} */}
-                </Button>
-              </Tooltip>
+              <>
+                {/* OpenAI Edge TTS Streaming Button */}
+                <Tooltip title={isPlaying ? "Stop speaking" : "Play voice (AI streaming)"} placement="bottom">
+                  <Button
+                    size="small"
+                    type="text"
+                    icon={
+                      isLoading ? (
+                        <LoadingOutlined spin />
+                      ) : isPlaying ? (
+                        <PauseOutlined />
+                      ) : (
+                        <SoundOutlined />
+                      )
+                    }
+                    onClick={() => onSpeak(message.content, message.id)}
+                    className={clsx(
+                      "font-mono text-[10px] h-6 flex items-center gap-1 transition-all",
+                      isLoading
+                        ? "text-purple-400 border-purple-500/30 bg-purple-500/10"
+                        : isPlaying
+                        ? "text-blue-400 border-blue-500/30 bg-blue-500/10"
+                        : "text-nova-muted hover:text-blue-400 hover:border-blue-500/30 hover:bg-blue-500/10",
+                    )}
+                    style={{ borderColor: isPlaying || isLoading ? undefined : "transparent" }}
+                  />
+                </Tooltip>
+              </>
             )}
             <Tooltip title={copied ? "✓ Copied" : "Copy"} placement="bottom">
               <Button

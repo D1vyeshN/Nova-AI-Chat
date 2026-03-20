@@ -10,7 +10,7 @@ export interface Message {
 
 export interface ApiKeys {
   groq: string;
-  elevenlabs: string;
+  elevenlabs?: string; // Optional - Premium TTS voice
 }
 
 export type AppStatus =
