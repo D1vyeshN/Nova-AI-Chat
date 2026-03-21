@@ -198,7 +198,7 @@ export default function ChatPage() {
             </div>
 
             {/* Action buttons */}
-            <Tooltip title="Settings">
+            {/* <Tooltip title="Settings">
               <Button
                 type="text"
                 size="small"
@@ -206,7 +206,7 @@ export default function ChatPage() {
                 onClick={() => setSettingsModalOpen(true)}
                 style={{ color: "#5a6478" }}
               />
-            </Tooltip>
+            </Tooltip> */}
             <Tooltip title="Clear chat">
               <Button
                 type="text"

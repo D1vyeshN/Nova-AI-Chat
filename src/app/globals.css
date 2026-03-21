@@ -4,6 +4,18 @@
   :root {
     --font-syne: 'Syne', sans-serif;
     --font-dm-mono: 'DM Mono', monospace;
+    
+    /* Nova AI Color Variables */
+    --nova-bg: #080b0f;
+    --nova-surface: #0e1117;
+    --nova-surface2: #141820;
+    --nova-border: #1e2530;
+    --nova-accent: #00e5ff;
+    --nova-accent2: #7c3aed;
+    --nova-accent3: #10b981;
+    --nova-text: #e8eaf0;
+    --nova-muted: #5a6478;
+    --nova-dim: #8a94a8;
   }
 
   * {
@@ -14,14 +26,14 @@
 
   html, body {
     height: 100%;
-    background: #080b0f;
-    color: #e8eaf0;
+    background: var(--nova-bg);
+    color: var(--nova-text);
   }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #1e2530; border-radius: 2px; }
+  ::-webkit-scrollbar-thumb { background: var(--nova-border); border-radius: 2px; }
   ::-webkit-scrollbar-thumb:hover { background: #2a3448; }
 }
 
@@ -29,18 +41,22 @@
   .font-display { font-family: var(--font-syne); }
   .font-mono { font-family: var(--font-dm-mono); }
 
-  .text-nova-accent { color: #00e5ff; }
-  .text-nova-muted  { color: #5a6478; }
-  .text-nova-dim    { color: #8a94a8; }
-  .text-nova-text   { color: #e8eaf0; }
-  .text-nova-accent3 { color: #10b981; }
+  .text-nova-accent { color: var(--nova-accent); }
+  .text-nova-muted  { color: var(--nova-muted); }
+  .text-nova-dim    { color: var(--nova-dim); }
+  .text-nova-text   { color: var(--nova-text); }
+  .text-nova-accent3 { color: var(--nova-accent3); }
 
-  .bg-nova-bg      { background: #080b0f; }
-  .bg-nova-surface  { background: #0e1117; }
-  .bg-nova-surface2 { background: #141820; }
+  .bg-nova-bg      { background: var(--nova-bg); }
+  .bg-nova-surface  { background: var(--nova-surface); }
+  .bg-nova-surface2 { background: var(--nova-surface2); }
+  
+  .bg-nova-accent  { background: var(--nova-accent); }
+  .bg-nova-accent2 { background: var(--nova-accent2); }
+  .bg-nova-accent3 { background: var(--nova-accent3); }
 
-  .border-nova-border { border-color: #1e2530; }
-  .border-nova-accent { border-color: #00e5ff; }
+  .border-nova-border { border-color: var(--nova-border); }
+  .border-nova-accent { border-color: var(--nova-accent); }
 }
 
 /* Animations */
@@ -68,15 +84,15 @@
 .ant-modal-content,
 .ant-modal-header,
 .ant-modal-footer {
-  background: #0e1117 !important;
+  background: var(--nova-surface) !important;
 }
 
 .ant-input,
 .ant-input-password,
 .ant-input-affix-wrapper {
-  background: #141820 !important;
-  border-color: #1e2530 !important;
-  color: #e8eaf0 !important;
+  background: var(--nova-surface2) !important;
+  border-color: var(--nova-border) !important;
+  color: var(--nova-text) !important;
 }
 
 .ant-input-affix-wrapper:focus,
@@ -86,9 +102,9 @@
 }
 
 .ant-btn-primary {
-  background: linear-gradient(135deg, #00e5ff, #00b4d8) !important;
+  background: linear-gradient(135deg, var(--nova-accent), #00b4d8) !important;
   border-color: transparent !important;
-  color: #080b0f !important;
+  color: var(--nova-bg) !important;
   font-weight: 700;
 }
 
@@ -106,8 +122,8 @@ textarea { resize: none !important; }
 
 /* Notification dark */
 .ant-notification-notice {
-  background: #0e1117 !important;
-  border: 1px solid #1e2530 !important;
+  background: var(--nova-surface) !important;
+  border: 1px solid var(--nova-border) !important;
 }
 
 
