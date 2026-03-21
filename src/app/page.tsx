@@ -9,6 +9,7 @@ import {
   notification,
   ConfigProvider,
   theme,
+  Image,
 } from "antd";
 import {
   AudioOutlined,
@@ -175,11 +176,8 @@ export default function ChatPage() {
           <div className="flex items-center gap-3">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
-              style={{
-                background: "linear-gradient(135deg, var(--nova-accent), var(--nova-accent2))",
-              }}
             >
-              ⬡
+              <Image src="/icons/logo-nova.svg" alt="Nova AI" width={32} height={32} preview={false}/>
             </div>
             <span className="font-display text-lg font-extrabold tracking-widest">
               NO<span className="text-nova-accent">VA</span>
