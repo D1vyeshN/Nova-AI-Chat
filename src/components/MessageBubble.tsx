@@ -210,8 +210,8 @@ export function MessageBubble({
             style={
               !isAI
                 ? {
-                    background: "#1a2035",
-                    borderColor: "rgba(0,229,255,0.15)",
+                    background: "var(--nova-surface2)",
+                    borderColor: "var(--nova-accent)",
                   }
                 : undefined
             }
@@ -234,7 +234,7 @@ export function MessageBubble({
                 // }}
                 className="w-full h-full bg-transparent border-none outline-none resize-none disabled:opacity-50"
               style={{
-                color: "#e8eaf0",
+                color: "var(--nova-text)",
                 fontFamily: "'Syne', sans-serif",
                 fontSize: 14,
                 padding: "0px 0px",

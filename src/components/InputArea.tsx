@@ -133,11 +133,11 @@ export function InputArea({
             "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all",
             isRecording && "animate-pulse",
           )}
-          style={{
-            background: isRecording ? "rgba(239,68,68,0.15)" : "#0e1117",
-            border: `1px solid ${isRecording ? "#ef4444" : "#1e2530"}`,
-            boxShadow: isRecording ? "0 0 12px rgba(239,68,68,0.3)" : "none",
-          }}
+            style={{
+              background: isRecording ? "rgba(239,68,68,0.15)" : "var(--nova-surface)",
+              border: `1px solid ${isRecording ? "#ef4444" : "var(--nova-border)"}`,
+              boxShadow: isRecording ? "0 0 12px rgba(239,68,68,0.3)" : "none",
+            }}
         >
           {isRecording ? (
             // stop square while recording
@@ -151,7 +151,7 @@ export function InputArea({
               height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#8a94a8"
+              stroke="var(--nova-dim)"
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -179,7 +179,10 @@ export function InputArea({
             "flex items-center w-full rounded-xl border overflow-hidden transition-all relative min-h-fit max-h-full",
             "border-nova-border focus-within:border-nova-accent/40",
           )}
-          style={{ background: "#0e1117" }}
+            style={{
+              background: "var(--nova-surface)",
+              border: "1px solid var(--nova-border)",
+            }}
         >
           {isRecording ? (
             /* ── waveform replaces the input while recording ── */
@@ -211,7 +214,7 @@ export function InputArea({
               rows={1}
               className="w-full h-full bg-transparent border-none outline-none resize-none disabled:opacity-50"
               style={{
-                color: "#e8eaf0",
+                color: "var(--nova-text)",
                 fontFamily: "'Syne', sans-serif",
                 fontSize: 14,
                 padding: "17px 14px",

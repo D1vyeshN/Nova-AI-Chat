@@ -20,9 +20,9 @@ export function WelcomeScreen({ onChipClick }: Props) {
       <div
         className="w-20 h-20 rounded-full flex items-center justify-center text-3xl relative"
         style={{
-          background: "radial-gradient(circle at 35% 35%, rgba(0,229,255,0.3), rgba(124,58,237,0.2), transparent 70%)",
-          border: "1px solid rgba(0,229,255,0.2)",
-          boxShadow: "0 0 40px rgba(0,229,255,0.1), inset 0 0 20px rgba(0,229,255,0.05)",
+          background: "radial-gradient(circle at 35% 35%, var(--nova-accent), var(--nova-accent2), transparent 70%)",
+          border: "1px solid var(--nova-accent)",
+          boxShadow: "0 0 40px var(--nova-accent), inset 0 0 20px var(--nova-accent)",
           animation: "float 3s ease-in-out infinite",
         }}
       >
@@ -30,7 +30,7 @@ export function WelcomeScreen({ onChipClick }: Props) {
         <div
           className="absolute inset-0 rounded-full"
           style={{
-            border: "1px solid rgba(0,229,255,0.08)",
+            border: "1px solid var(--nova-accent)",
             animation: "float 3s ease-in-out infinite reverse",
             transform: "scale(1.15)",
           }}
@@ -52,7 +52,7 @@ export function WelcomeScreen({ onChipClick }: Props) {
             key={text}
             onClick={() => onChipClick(text)}
             className="font-mono text-xs px-3 py-1.5 rounded-full border border-nova-border bg-nova-surface2 text-nova-dim 
-              hover:border-nova-accent hover:text-nova-accent hover:bg-[rgba(0,229,255,0.05)] transition-all duration-200"
+              hover:border-nova-accent hover:text-nova-accent hover:bg-[rgba(14,165,233,0.05)] transition-all duration-200"
           >
             {emoji} {text}
           </button>

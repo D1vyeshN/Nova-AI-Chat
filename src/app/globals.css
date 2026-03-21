@@ -5,7 +5,7 @@
     --font-syne: 'Syne', sans-serif;
     --font-dm-mono: 'DM Mono', monospace;
     
-    /* Nova AI Color Variables */
+    /* Nova AI Dark Theme Variables (Default) */
     --nova-bg: #080b0f;
     --nova-surface: #0e1117;
     --nova-surface2: #141820;
@@ -16,6 +16,20 @@
     --nova-text: #e8eaf0;
     --nova-muted: #5a6478;
     --nova-dim: #8a94a8;
+  }
+
+  .light {
+    /* Nova AI Light Theme Variables */
+    --nova-bg: #ffffff;
+    --nova-surface: #f8fafc;
+    --nova-surface2: #f1f5f9;
+    --nova-border: #e2e8f0;
+    --nova-accent: #0ea5e9;
+    --nova-accent2: #7c3aed;
+    --nova-accent3: #10b981;
+    --nova-text: #0f172a;
+    --nova-muted: #64748b;
+    --nova-dim: #94a3b8;
   }
 
   * {
@@ -45,15 +59,20 @@
   .text-nova-muted  { color: var(--nova-muted); }
   .text-nova-dim    { color: var(--nova-dim); }
   .text-nova-text   { color: var(--nova-text); }
+  .text-nova-accent { color: var(--nova-accent); }
+  .text-nova-muted  { color: var(--nova-muted); }
+  .text-nova-dim    { color: var(--nova-dim); }
+  .text-nova-text   { color: var(--nova-text); }
   .text-nova-accent3 { color: var(--nova-accent3); }
 
   .bg-nova-bg      { background: var(--nova-bg); }
   .bg-nova-surface  { background: var(--nova-surface); }
   .bg-nova-surface2 { background: var(--nova-surface2); }
-  
   .bg-nova-accent  { background: var(--nova-accent); }
   .bg-nova-accent2 { background: var(--nova-accent2); }
   .bg-nova-accent3 { background: var(--nova-accent3); }
+  .bg-nova-muted   { background: var(--nova-muted); }
+  .bg-nova-dim     { background: var(--nova-dim); }
 
   .border-nova-border { border-color: var(--nova-border); }
   .border-nova-accent { border-color: var(--nova-accent); }
@@ -134,5 +153,5 @@ textarea { resize: none !important; }
 
 
 /* Strong / em */
-.markdown-body strong { color: #fff; font-weight: 600; }
-.markdown-body em { color: #a0aabe; }
+.markdown-body strong { color: var(--nova-text); font-weight: 600; }
+.markdown-body em { color: var(--nova-dim); }

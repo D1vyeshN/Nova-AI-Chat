@@ -1,5 +1,6 @@
 import type { Config } from "tailwindcss";
 import { novaColors } from "./src/styles/colors";
+import { novaFontSizes } from "./src/styles/typography";
 
 const config: Config = {
   darkMode: "class", // optional but recommended
@@ -16,6 +17,9 @@ const config: Config = {
       },
       colors: {
         nova: novaColors,
+      },
+      fontSize: {
+        ...novaFontSizes,
       },
       animation: {
         "pulse-slow": "pulse 3s ease-in-out infinite",

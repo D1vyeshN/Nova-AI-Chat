@@ -27,6 +27,8 @@ import { MessageBubble } from "@/components/MessageBubble";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { InputArea } from "@/components/InputArea";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 const { TextArea } = Input;
 
@@ -129,26 +131,26 @@ export default function ChatPage() {
   const isBusy = status === "thinking" || isTranscribing || isStreaming;
 
   return (
-    <ConfigProvider
-      theme={{
-        algorithm: theme.darkAlgorithm,
-        token: {
-          colorBgBase: "#080b0f",
-          colorBgContainer: "#0e1117",
-          colorBgElevated: "#0e1117",
-          colorBorder: "#1e2530",
-          colorPrimary: "#00e5ff",
-          colorText: "#e8eaf0",
-          colorTextSecondary: "#8a94a8",
-          borderRadius: 8,
-          fontFamily: "'Syne', sans-serif",
-        },
-      }}
-    >
-      {contextHolder}
+    <ThemeProvider>
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+          token: {
+            colorBgBase: "var(--nova-bg)",
+            colorBgContainer: "var(--nova-surface)",
+            colorBgElevated: "var(--nova-surface)",
+            colorBorder: "var(--nova-border)",
+            colorPrimary: "var(--nova-accent)",
+            colorText: "var(--nova-text)",
+            colorTextSecondary: "var(--nova-dim)",
+            borderRadius: 8,
+            fontFamily: "'Syne', sans-serif",
+          },
+        }}
+      >
 
-      <div className="h-screen flex flex-col bg-nova-bg overflow-hidden relative">
-        {/* Background atmosphere */}
+        {contextHolder}
+        <div className="h-screen flex flex-col bg-nova-bg overflow-hidden relative">
         <div className="fixed inset-0 pointer-events-none z-0">
           <div
             className="absolute inset-0"
@@ -165,15 +167,16 @@ export default function ChatPage() {
         <header
           className="relative z-10 flex items-center justify-between px-6 py-3 border-b border-nova-border"
           style={{
-            background: "rgba(8,11,15,0.9)",
+            background: "var(--nova-bg)",
             backdropFilter: "blur(20px)",
+            opacity: 0.9,
           }}
         >
           <div className="flex items-center gap-3">
             <div
               className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
               style={{
-                background: "linear-gradient(135deg, #00e5ff, #7c3aed)",
+                background: "linear-gradient(135deg, var(--nova-accent), var(--nova-accent2))",
               }}
             >
               ⬡
@@ -187,7 +190,7 @@ export default function ChatPage() {
             {/* Status badge */}
             <div
               className="flex items-center gap-2 font-mono text-[11px]"
-              style={{ color: "#5a6478" }}
+              style={{ color: "var(--nova-muted)" }}
             >
               <Badge
                 status="processing"
@@ -198,15 +201,7 @@ export default function ChatPage() {
             </div>
 
             {/* Action buttons */}
-            {/* <Tooltip title="Settings">
-              <Button
-                type="text"
-                size="small"
-                icon={<SettingOutlined />}
-                onClick={() => setSettingsModalOpen(true)}
-                style={{ color: "#5a6478" }}
-              />
-            </Tooltip> */}
+            <ThemeSwitcher />
             <Tooltip title="Clear chat">
               <Button
                 type="text"
@@ -217,7 +212,7 @@ export default function ChatPage() {
                   clearMessages();
                   stopRecording();
                 }}
-                style={{ color: "#5a6478" }}
+                style={{ color: "var(--nova-muted)" }}
                 disabled={messages.length === 0}
               />
             </Tooltip>
@@ -284,5 +279,6 @@ export default function ChatPage() {
       </div>
 
     </ConfigProvider>
+    </ThemeProvider>
   );
 }
