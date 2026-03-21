@@ -18,8 +18,6 @@ import {
   LoadingOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
-import clsx from "clsx";
-
 import { AppStatus } from "@/types";
 import { useChat } from "@/hooks/useChat";
 import { useSTT } from "@/hooks/useSTT";
@@ -29,7 +27,6 @@ import { MessageBubble } from "@/components/MessageBubble";
 import { TypingIndicator } from "@/components/TypingIndicator";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { InputArea } from "@/components/InputArea";
-import { VoiceSelectionModal } from "@/components/VoiceSelectionModal";
 
 const { TextArea } = Input;
 
@@ -84,7 +81,6 @@ export default function ChatPage() {
     }
   };
 
-  console.log(messages,"messages");
   const handleMic = async () => {
     if (isRecording) {
       try {
@@ -287,13 +283,6 @@ export default function ChatPage() {
         </div>
       </div>
 
-      {/* ===== VOICE SELECTION MODAL ===== */}
-      <VoiceSelectionModal
-        open={settingsModalOpen}
-        initialVoice={selectedVoice}
-        onSave={updateVoice}
-        onCancel={() => setSettingsModalOpen(false)}
-      />
     </ConfigProvider>
   );
 }
