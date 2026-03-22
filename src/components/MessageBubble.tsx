@@ -64,7 +64,7 @@ function getLanguageName(langCode: string): string {
   return LANGUAGE_NAMES[langCode] || langCode;
 }
 
-interface Props {
+export interface Props {
   message: Message;
   isPlaying: boolean;
   isLoading: boolean;
