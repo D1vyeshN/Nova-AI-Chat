@@ -136,12 +136,12 @@ const components: Components = {
   h4: (p) => <h4 className="text-nova-text font-semibold text-[15px] mt-3 mb-1 leading-snug">{p.children}</h4>,
 
   // ── Paragraph ───────────────────────────────────────────────────────────────
-  p: (p) => <p className="mb-3 pl-1 last:mb-0 text-nova-text leading-relaxed text-[15px]">{p.children}</p>,
+  p: (p) => <p className="mb-3 px-1 last:mb-0 text-nova-text leading-relaxed text-[15px]">{p.children}</p>,
 
   // ── Lists ───────────────────────────────────────────────────────────────────
-  ul: (p) => <ul className="pl-10 my-2 mb-3 space-y-1 list-disc marker:text-nova-accent">{p.children}</ul>,
-  ol: (p) => <ol className="pl-10 my-2 mb-3 space-y-1 list-decimal marker:text-nova-accent">{p.children}</ol>,
-  li: (p) => <li className="text-nova-text leading-relaxed text-[15px]">{p.children}</li>,
+  ul: (p) => <ul className="pl-10 pr-1 my-2 mb-3 space-y-1 list-disc marker:text-nova-accent">{p.children}</ul>,
+  ol: (p) => <ol className="pl-10 pr-1 my-2 mb-3 space-y-1 list-decimal marker:text-nova-accent">{p.children}</ol>,
+  li: (p) => <li className="text-nova-text wrap-break-word leading-relaxed text-[15px]">{p.children}</li>,
 
   // ── Blockquote ──────────────────────────────────────────────────────────────
   blockquote: (p) => (
@@ -181,7 +181,7 @@ export function MarkdownRenderer({ content }: MarkdownRendererProps) {
   const { resolvedTheme } = useTheme();
   
   return (
-    <div className={`markdown-body text-nova-text leading-relaxed hljs-${resolvedTheme}`}>
+    <div className={`markdown-body w-full text-nova-text leading-relaxed hljs-${resolvedTheme}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}

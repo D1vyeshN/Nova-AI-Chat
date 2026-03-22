@@ -125,7 +125,10 @@ export function InputArea({
     }
 
     return (
-      <Tooltip title={isRecording ? "Stop recording" : "Use Voice"} placement="top">
+      <Tooltip
+        title={isRecording ? "Stop recording" : "Use Voice"}
+        placement="top"
+      >
         <button
           onClick={onMic}
           disabled={isBusy && !isRecording}
@@ -133,11 +136,13 @@ export function InputArea({
             "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all",
             isRecording && "animate-pulse",
           )}
-            style={{
-              background: isRecording ? "rgba(239,68,68,0.15)" : "var(--nova-surface)",
-              border: `1px solid ${isRecording ? "#ef4444" : "var(--nova-border)"}`,
-              boxShadow: isRecording ? "0 0 12px rgba(239,68,68,0.3)" : "none",
-            }}
+          style={{
+            background: isRecording
+              ? "rgba(239,68,68,0.15)"
+              : "var(--nova-surface)",
+            border: `1px solid ${isRecording ? "#ef4444" : "var(--nova-border)"}`,
+            boxShadow: isRecording ? "0 0 12px rgba(239,68,68,0.3)" : "none",
+          }}
         >
           {isRecording ? (
             // stop square while recording
@@ -169,66 +174,70 @@ export function InputArea({
 
   return (
     <div
-      className="px-4 md:px-8 py-2 pb-8"
+      className="pt-0 px-4 pb-2 md:px-8 bg-transparent"
       // style={{ background: "rgba(8,11,15,0.95)", backdropFilter: "blur(20px)" }}
     >
-      <div className="flex gap-2 items-end h-full">
-        {/* ── input area — switches between textarea and waveform ── */}
-        <div
-          className={clsx(
-            "flex items-center w-full rounded-xl border overflow-hidden transition-all relative min-h-fit max-h-full",
-            "border-nova-border focus-within:border-nova-accent/40",
-          )}
-            style={{
-              background: "var(--nova-surface)",
-              border: "1px solid var(--nova-border)",
-            }}
-        >
-          {isRecording ? (
-            /* ── waveform replaces the input while recording ── */
-            <div className="flex items-center gap-3 px-4 py-3 h-14">
-              <Waveform />
-              <span className="text-[13px] font-mono">
-                Listening...
-              </span>
-              <span className="text-[12px] text-nova-muted font-mono ml-auto">
-                {formatTime(recSeconds)}
-              </span>
-            </div>
-          ) : isTranscribing ? (
-            /* ── transcribing state ── */
-            <div className="flex items-center gap-3 px-4 py-3 h-14">
-              <span className="text-[13px] font-mono animate-pulse">
-                Transcribing...
-              </span>
-            </div>
-          ) : (
-            /* ── normal textarea ── */
-            <textarea
-              ref={textareaRef}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Type a message or press the mic..."
-              disabled={isBusy}
-              rows={1}
-              className="w-full h-full bg-transparent border-none outline-none resize-none disabled:opacity-50"
-              style={{
-                color: "var(--nova-text)",
-                fontFamily: "'Syne', sans-serif",
-                fontSize: 14,
-                padding: "17px 14px",
-                lineHeight: "1.5",
-                minHeight: "56px",
-                maxHeight: "260px",
-                // height: "260px",
-              }}
-            />
-          )}
-          <div className="flex items-center gap-2 absolute right-2 bottom-2">
-            {/* ── right button slot ── */}
-            <RightButton />
+      {/* ── input area — switches between textarea and waveform ── */}
+      <div
+        className={clsx(
+          "flex items-end gap-2 p-2 w-full rounded-xl border overflow-hidden transition-all relative min-h-fit max-h-full",
+          "border-nova-border focus-within:border-nova-accent/40 shadow-lg",
+        )}
+        style={{
+          background: "var(--nova-surface)",
+          // boxShadow: "0px 2px 6px var(--nova-border)",
+        }}
+      >
+        <div className={clsx(
+          "flex items-center w-full overflow-hidden transition-all relative min-h-fit max-h-full",
+        )}
+        style={{
+          background: "var(--nova-surface)",
+          // boxShadow: "0px 2px 6px var(--nova-border)",
+        }}>
+        {isRecording ? (
+          /* ── waveform replaces the input while recording ── */
+          <div className="flex items-center gap-3 px-4 py-3 h-14">
+            <Waveform />
+            <span className="text-[13px] font-mono">Listening...</span>
+            <span className="text-[12px] text-nova-muted font-mono ml-auto">
+              {formatTime(recSeconds)}
+            </span>
           </div>
+        ) : isTranscribing ? (
+          /* ── transcribing state ── */
+          <div className="flex items-center gap-3 px-4 py-3 h-14">
+            <span className="text-[13px] font-mono animate-pulse">
+              Transcribing...
+            </span>
+          </div>
+        ) : (
+          /* ── normal textarea ── */
+          <textarea
+            ref={textareaRef}
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type a message or press the mic..."
+            disabled={isBusy}
+            rows={1}
+            className="w-full h-full border-none bg-transparent outline-none resize-none disabled:opacity-50 p-2"
+            style={{
+              color: "var(--nova-text)",
+              fontFamily: "'Syne', sans-serif",
+              fontSize: 14,
+              // padding: "17px 14px",
+              lineHeight: "1.5",
+              minHeight: "40px",
+              maxHeight: "260px",
+              // height: "260px",
+            }}
+          />
+        )}
+        </div>
+        <div className="flex items-center bottom-2">
+          {/* ── right button slot ── */}
+          <RightButton />
         </div>
       </div>
       <p className="text-center text-[10px] leading-[14px] md:text-xs text-nova-muted mt-2">

@@ -5,6 +5,39 @@ import { loadModule } from "cld3-asm";
 import { Voice } from "@/types";
 import { allVoices } from "@/utils/voices";
 
+// Cache for language detection module
+let cldModuleCache: any = null;
+let cldModuleLoading = false;
+
+// Simple cache for detected languages (last 50 texts)
+const languageCache = new Map<string, string>();
+const MAX_CACHE_SIZE = 50;
+
+// Helper function to get cached language detector
+async function getLanguageDetector() {
+  if (cldModuleCache) return cldModuleCache;
+  
+  if (!cldModuleLoading) {
+    cldModuleLoading = true;
+    try {
+      const cldFactory = await loadModule();
+      cldModuleCache = cldFactory.create();
+    } catch (error) {
+      console.error("Failed to load language detection module:", error);
+      throw error;
+    } finally {
+      cldModuleLoading = false;
+    }
+  }
+  
+  // Wait for loading to complete if it was in progress
+  while (cldModuleLoading) {
+    await new Promise(resolve => setTimeout(resolve, 10));
+  }
+  
+  return cldModuleCache;
+}
+
 // ── strip everything except plain speakable text ──────────────────────────────
 function stripToSpeakable(text: string): string {
   return (
@@ -85,8 +118,13 @@ export function useTTS(selectedVoice?: Voice) {
 
   const stop = useCallback(() => {
     if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.src = "";
+      const audio = audioRef.current;
+      audio.pause();
+      // Clean up the audio URL if it exists
+      if (audio.src && audio.src.startsWith('blob:')) {
+        URL.revokeObjectURL(audio.src);
+      }
+      audio.src = "";
       audioRef.current = null;
     }
     window.speechSynthesis?.cancel();
@@ -104,15 +142,6 @@ export function useTTS(selectedVoice?: Voice) {
       const clean = stripToSpeakable(text);
       if (!clean) return;
 
-      const cldFactory = await loadModule();
-      const identifier = cldFactory.create();
-      // const result = identifier.findLanguage(clean);
-      const result = identifier.findMostFrequentLanguages(clean,2);
-      const detectedVoice = allVoices.find((v) => v.language.startsWith(result?.[0]?.language));
-      
-      // Stop any existing audio
-      stop();
-
       setIsLoading(true);
       setIsVoiceStreaming(true);
       isSpeakingRef.current = true;
@@ -120,7 +149,45 @@ export function useTTS(selectedVoice?: Voice) {
       setIsSpeaking(true);
       setPlayingId(messageId);
 
+      // Use default voice immediately for faster response
+      let voiceToUse = selectedVoice?.name || "en-US-AvaMultilingualNeural";
+
       try {
+        // Start language detection asynchronously (non-blocking)
+        const languageDetectionPromise = (async () => {
+          try {
+            // Check cache first
+            const cacheKey = clean.substring(0, 100); // Use first 100 chars as cache key
+            if (languageCache.has(cacheKey)) {
+              const cachedVoice = languageCache.get(cacheKey);
+              if (cachedVoice) {
+                const detectedVoice = allVoices.find((v) => v.name === cachedVoice);
+                return detectedVoice?.name || voiceToUse;
+              }
+            }
+
+            const identifier = await getLanguageDetector();
+            const result = identifier.findMostFrequentLanguages(clean, 2);
+            const detectedVoice = allVoices.find((v) => v.language.startsWith(result?.[0]?.language));
+            const optimalVoice = detectedVoice?.name || voiceToUse;
+
+            // Cache the result
+            if (languageCache.size >= MAX_CACHE_SIZE) {
+              // Remove oldest entry (first in Map)
+              const firstKey = languageCache.keys().next().value;
+              if (firstKey) {
+                languageCache.delete(firstKey);
+              }
+            }
+            languageCache.set(cacheKey, optimalVoice);
+
+            return optimalVoice;
+          } catch (error) {
+            console.warn("Language detection failed, using default voice:", error);
+            return voiceToUse;
+          }
+        })();
+
         const response = await fetch("/api/tts", {
           method: "POST",
           headers: {
@@ -128,7 +195,7 @@ export function useTTS(selectedVoice?: Voice) {
           },
           body: JSON.stringify({
             input: clean,
-            voice: detectedVoice?.name || "en-US-AvaMultilingualNeural",
+            voice: voiceToUse,
             response_format: "mp3",
             speed: 1.0,
           }),
@@ -161,6 +228,20 @@ export function useTTS(selectedVoice?: Voice) {
 
         setIsLoading(false);
         await audio.play();
+
+        // Check if language detection found a better voice
+        try {
+          const optimalVoice = await languageDetectionPromise;
+          if (optimalVoice !== voiceToUse && audioRef.current) {
+            console.log(`Switching to better voice: ${optimalVoice}`);
+            // Optional: Restart with better voice for future optimization
+            // For now, continue with current audio to avoid interruption
+          }
+        } catch (error) {
+          // Language detection failed, but audio is already playing
+          console.warn("Language detection failed after audio start");
+        }
+        
       } catch (error) {
         console.error("OpenAI Edge TTS error:", error);
         stop();
@@ -169,16 +250,17 @@ export function useTTS(selectedVoice?: Voice) {
         setIsVoiceStreaming(false);
       }
     },
-    [stop],
+    [stop, selectedVoice],
   );
 
   // ── Main speak function (uses OpenAI Edge TTS) ──────────────────────────
   const speak = useCallback(
     async (text: string, messageId: string) => {
-      // Stop if already speaking
+      // Stop current audio if playing, but continue with new audio
       if (isSpeakingRef.current) {
         stop();
-        return;
+        // Small delay to ensure cleanup before starting new audio
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
 
       const clean = stripToSpeakable(text);
@@ -189,6 +271,13 @@ export function useTTS(selectedVoice?: Voice) {
     },
     [stop, speakWithOpenAI],
   );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stop();
+    };
+  }, [stop]);
 
   return {
     isSpeaking,

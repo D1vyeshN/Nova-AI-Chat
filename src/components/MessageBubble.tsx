@@ -70,6 +70,7 @@ interface Props {
   isLoading: boolean;
   isStreaming: boolean;
   onSpeak: (text: string, id: string) => void;
+  onStop: () => void;
   streamingDomRef: React.MutableRefObject<HTMLSpanElement | null>;
   onEditMessage?: (messageId: string, isEditing: boolean) => void;
   onUpdateMessage?: (messageId: string, newContent: string) => void;
@@ -82,6 +83,7 @@ export function MessageBubble({
   isLoading,
   isStreaming: messageStreaming,
   onSpeak,
+  onStop,
   streamingDomRef,
   onEditMessage,
   onUpdateMessage,
@@ -203,7 +205,7 @@ export function MessageBubble({
         >
           <div
             className={clsx(
-              "flex items-center px-2 py-2 rounded-xl text-sm leading-relaxed",
+              "flex items-center py-2 rounded-xl text-sm leading-relaxed text-justify",
               isAI ? "bg-transparent border-0 pt-0 px-0 md:px-2" : "border rounded-br-sm md:mr-2 px-4 w-fit",
               isError && "border-red-500/30 bg-red-500/5",
             )}
@@ -226,12 +228,6 @@ export function MessageBubble({
                 onKeyDown={handleKeyDown}
                 rows={1}
                 placeholder="Edit your message..."
-                // className="bg-nova-surface border-nova-border text-nova-text"
-                // style={{
-                //   background: "#0e1117",
-                //   borderColor: "#1e2530",
-                //   color: "#e8eaf0",
-                // }}
                 className="w-full h-full bg-transparent border-none outline-none resize-none disabled:opacity-50"
               style={{
                 color: "var(--nova-text)",
@@ -248,8 +244,10 @@ export function MessageBubble({
               // During stream: still write directly to DOM for perf,
               // but wrap in markdown on final commit
               <span ref={spanRef} style={{ whiteSpace: "pre-wrap" }} />
-            ) : (
+            ) : isAI ? (
               <MarkdownRenderer content={message.content} />
+            ) : (
+              <span style={{ whiteSpace: "pre-wrap" }}>{message.content}</span>
             )}
 
             {messageStreaming && <span className="streaming-cursor" />}
@@ -280,7 +278,7 @@ export function MessageBubble({
                   />
                 </Tooltip>
               </>
-            ) : (
+            ) : (!messageStreaming && (
               <>
                 {isAI && !isError && (
                   <Tooltip title={isPlaying ? "Stop speaking" : "Play voice"} placement="bottom">
@@ -296,7 +294,7 @@ export function MessageBubble({
                           <SoundOutlined />
                         )
                       }
-                      onClick={() => onSpeak(message.content, message.id)}
+                      onClick={() => isPlaying ? onStop() : onSpeak(message.content, message.id)}
                       className={clsx(
                         "font-mono text-[10px] h-6 flex items-center gap-1 transition-all",
                         isLoading
@@ -335,7 +333,7 @@ export function MessageBubble({
                   />
                 </Tooltip>
               </>
-            )}
+            ))}
           </div>
         </div>
       </div>

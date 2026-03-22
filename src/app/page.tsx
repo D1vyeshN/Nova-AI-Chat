@@ -101,9 +101,12 @@ export default function ChatPage() {
         }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
+        console.error('Recording error:', err);
         api.error({
           message: "Recording error",
-          description: msg,
+          description: msg.includes("No active recording") || msg.includes("Not recording") 
+            ? "Please start recording first" 
+            : msg,
           placement: "bottom",
           duration: 3,
         });
@@ -113,7 +116,7 @@ export default function ChatPage() {
         await startRecording();
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
-        api.error({ message: msg, placement: "bottom", duration: 3 });
+        api.error({ title: msg, placement: "bottom", duration: 3 });
       }
     }
   };
@@ -222,7 +225,7 @@ export default function ChatPage() {
           <div className="w-full max-w-4xl flex flex-col h-full">
             {/* ===== MESSAGES ===== */}
             <div
-              className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-4 relative z-1 scroll-smooth"
+              className="flex-1 overflow-y-auto overflow-x-clip px-3 md:px-6 py-4 space-y-4 relative z-1 scroll-smooth"
               style={{
                 scrollbarWidth: "thin",
                 scrollbarColor: "#1e2530 transparent",
@@ -248,6 +251,7 @@ export default function ChatPage() {
                         isPlaying={playingId === msg.id}
                         isLoading={isVoiceStreaming && playingId === msg.id}
                         onSpeak={speak}
+                        onStop={stop}
                         onEditMessage={editMessage}
                         onUpdateMessage={updateMessage}
                         onRegenerateResponse={regenerateResponse}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 
 export function useSTT() {
   const [isRecording, setIsRecording] = useState(false);
@@ -10,8 +10,21 @@ export function useSTT() {
 
   const startRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Clean up any existing recorder
+      if (mediaRecorderRef.current) {
+        const existingRecorder = mediaRecorderRef.current;
+        if (existingRecorder.state !== 'inactive') {
+          existingRecorder.stop();
+        }
+        mediaRecorderRef.current = null;
+      }
+      
+      // Reset states
+      setIsRecording(false);
+      setIsTranscribing(false);
       chunksRef.current = [];
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
 
@@ -29,12 +42,24 @@ export function useSTT() {
   const stopRecording = useCallback((): Promise<string> => {
     return new Promise((resolve, reject) => {
       const recorder = mediaRecorderRef.current;
-      if (!recorder || !isRecording) return reject("Not recording");
+      if (!recorder) {
+        // If no recorder, ensure states are reset and reject
+        setIsRecording(false);
+        setIsTranscribing(false);
+        return reject("No active recording");
+      }
+
+      // Check actual recorder state instead of React state
+      if (recorder.state !== 'recording') {
+        return reject("Not recording");
+      }
 
       recorder.onstop = async () => {
         const stream = recorder.stream;
         stream.getTracks().forEach((t) => t.stop());
-
+        
+        // Clear the recorder reference
+        mediaRecorderRef.current = null;
         setIsRecording(false);
         setIsTranscribing(true);
 
@@ -58,6 +83,16 @@ export function useSTT() {
       recorder.stop();
     });
   }, [isRecording]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.stop();
+      }
+      mediaRecorderRef.current = null;
+    };
+  }, []);
 
   return { isRecording, isTranscribing, startRecording, stopRecording };
 }
