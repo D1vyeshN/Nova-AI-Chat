@@ -3,6 +3,7 @@ import withPWA from 'next-pwa'
 const nextConfig = {
   reactStrictMode: true,
   turbopack: {}, // Empty turbopack config to silence the error
+  productionBrowserSourceMaps: true,
 }
 
 export default withPWA({

@@ -215,6 +215,7 @@ export default function ChatPage() {
                   clearMessages();
                   stopRecordingIfActive();
                 }}
+                aria-label="Clear all messages"
                 style={{ color: "var(--nova-muted)" }}
                 disabled={messages.length === 0}
               />

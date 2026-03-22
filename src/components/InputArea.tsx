@@ -77,6 +77,7 @@ export function InputArea({
         <Tooltip title="Stop generation" placement="top">
           <button
             onClick={onStop}
+            aria-label="Stop generation"
             className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all"
             style={{
               background: "rgba(239,68,68,0.15)",
@@ -99,6 +100,7 @@ export function InputArea({
           <button
             onClick={onSend}
             disabled={isBusy}
+            aria-label="Send message"
             className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all disabled:opacity-40"
             style={{
               background: "linear-gradient(135deg, var(--nova-accent), #00b4d8)",
@@ -133,6 +135,7 @@ export function InputArea({
         <button
           onClick={onMic}
           disabled={isBusy && !isRecording}
+          aria-label={isRecording ? "Stop recording" : "Start voice recording"}
           className={clsx(
             "flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all",
             isRecording && "animate-pulse",
@@ -220,6 +223,7 @@ export function InputArea({
           <textarea
             ref={textareaRef}
             value={inputText}
+            name="input-text"
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Type a message or press the mic..."

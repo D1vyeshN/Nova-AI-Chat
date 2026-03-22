@@ -55,6 +55,7 @@ export function WelcomeScreen({ onChipClick }: Props) {
           <button
             key={text}
             onClick={() => onChipClick(text)}
+            aria-label={`Quick action: ${text}`}
             className="font-mono text-xs px-3 py-1.5 rounded-full border border-nova-border bg-nova-surface2 text-nova-dim 
               hover:border-nova-accent hover:text-nova-accent hover:bg-[rgba(14,165,233,0.05)] transition-all duration-200"
           >

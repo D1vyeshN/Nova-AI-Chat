@@ -299,6 +299,7 @@ export function MessageBubble({
                   size="small"
                   type="text"
                   onClick={handleCancelEdit}
+                  aria-label="Cancel editing"
                   className="font-mono component-label h-6 flex items-center gap-1 transition-all !border-nova-muted"
                 >
                   Cancel
@@ -307,6 +308,7 @@ export function MessageBubble({
                   size="small"
                   type="text"
                   onClick={handleSaveEdit}
+                  aria-label="Save edited message"
                   className="font-mono component-label h-6 flex items-center gap-1 transition-all !border-nova-muted !bg-nova-border"
                 >
                   Save
@@ -327,6 +329,7 @@ export function MessageBubble({
                             ? onStop()
                             : onSpeak(message.content, message.id)
                         }
+                        aria-label={isPlaying ? "Stop speaking" : "Play voice"}
                         className={clsx(
                           "flex items-center justify-center font-mono component-label h-6 w-6 gap-1 transition-all",
                           isLoading
@@ -352,6 +355,7 @@ export function MessageBubble({
                         size="small"
                         icon={<EditOutlined />}
                         onClick={handleEdit}
+                        aria-label="Edit message"
                         className="size-1 flex items-center transition-all text-nova-muted !border-nova-muted hover:!text-cyan-400 hover:!border-cyan-500/30 hover:!bg-cyan-500/10"
                         // style={{ borderColor: "transparent" }}
                       />
@@ -364,6 +368,7 @@ export function MessageBubble({
                     <Button
                       size="small"
                       onClick={handleCopy}
+                      aria-label={copied ? "Text copied" : "Copy message"}
                       className={clsx(
                         "flex items-center justify-center font-mono component-label h-6 w-6 gap-1 transition-all",
                         "text-nova-muted !border-nova-muted hover:!text-purple-400 hover:!border-purple-500/30 hover:!bg-purple-500/10",
