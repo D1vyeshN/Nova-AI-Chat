@@ -54,10 +54,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${syne.variable} ${dmMono.variable}`} suppressHydrationWarning>
       <head>
-        {/* Preconnect to Google Fonts for faster font loading */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        
         {/* Preload critical resources */}
         <link rel="preload" href="/manifest.json" as="fetch" crossOrigin="anonymous" />
         <link rel="preload" href="/icons/icon-192x192.png" as="image" type="image/png" />

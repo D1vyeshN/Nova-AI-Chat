@@ -111,7 +111,7 @@ export function MessageBubble({
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const el = e.target;
     el.style.height = "auto";
-    el.style.height = el.scrollHeight + "px";
+    // el.style.height = el.scrollHeight + "px";
     el.style.width = "100%";
     setEditText(el.value);
   };
@@ -185,7 +185,7 @@ export function MessageBubble({
       const el = textAreaRef.current;
       el.style.height = "auto";
       el.style.width = "100%";
-      el.style.height = el.scrollHeight + "px";
+      // el.style.height = el.scrollHeight + "px";
     }
   }, [message.isEditing]);
 
