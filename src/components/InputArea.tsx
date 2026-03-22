@@ -1,12 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Tooltip } from "antd";
-import {
-  AudioOutlined,
-  StopOutlined,
-  ArrowUpOutlined,
-} from "@ant-design/icons";
+// Optimized antd imports
+import Tooltip from "antd/es/tooltip";
+
 import clsx from "clsx";
 
 interface InputAreaProps {

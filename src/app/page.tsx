@@ -1,16 +1,17 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import {
-  Button,
-  Input,
-  Tooltip,
-  Badge,
-  notification,
-  ConfigProvider,
-  theme,
-  Image,
-} from "antd";
+import { useState, useRef, useEffect, useCallback, Suspense } from "react";
+import dynamic from "next/dynamic";
+// Optimized antd imports
+import Button from "antd/es/button";
+import Input from "antd/es/input";
+import Tooltip from "antd/es/tooltip";
+import Badge from "antd/es/badge";
+import notification from "antd/es/notification";
+import ConfigProvider from "antd/es/config-provider";
+import theme from "antd/es/theme";
+import Image from "antd/es/image";
+// Standard icon imports (deep imports cause TypeScript issues)
 import {
   AudioOutlined,
   SendOutlined,
@@ -24,12 +25,36 @@ import { useChat } from "@/hooks/useChat";
 import { useSTT } from "@/hooks/useSTT";
 import { useTTS } from "@/hooks/useTTS";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
-import { MessageBubble } from "@/components/MessageBubble";
-import { TypingIndicator } from "@/components/TypingIndicator";
-import { WelcomeScreen } from "@/components/WelcomeScreen";
-import { InputArea } from "@/components/InputArea";
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-import { ThemeProvider } from "@/contexts/ThemeContext";
+
+// Dynamic imports for code splitting
+const MessageBubble = dynamic(() => import("@/components/MessageBubble").then(mod => ({ default: mod.MessageBubble })), {
+  loading: () => <div className="animate-pulse bg-nova-surface rounded-lg h-20 mb-2" />,
+  ssr: false
+});
+
+const TypingIndicator = dynamic(() => import("@/components/TypingIndicator").then(mod => ({ default: mod.TypingIndicator })), {
+  loading: () => null,
+  ssr: false
+});
+
+const WelcomeScreen = dynamic(() => import("@/components/WelcomeScreen").then(mod => ({ default: mod.WelcomeScreen })), {
+  loading: () => <div className="animate-pulse bg-nova-surface rounded-lg h-40" />,
+  ssr: false
+});
+
+const InputArea = dynamic(() => import("@/components/InputArea").then(mod => ({ default: mod.InputArea })), {
+  loading: () => <div className="animate-pulse bg-nova-surface rounded-lg h-20" />,
+  ssr: false
+});
+
+const ThemeSwitcher = dynamic(() => import("@/components/ThemeSwitcher").then(mod => ({ default: mod.ThemeSwitcher })), {
+  loading: () => null,
+  ssr: false
+});
+
+const ThemeProvider = dynamic(() => import("@/contexts/ThemeContext").then(mod => ({ default: mod.ThemeProvider })), {
+  ssr: false
+});
 
 const { TextArea } = Input;
 
@@ -137,151 +162,164 @@ export default function ChatPage() {
   const isBusy = status === "thinking" || isTranscribing || isStreaming;
 
   return (
-    <ThemeProvider>
-      <ConfigProvider
-        theme={{
-          algorithm: theme.darkAlgorithm,
-          token: {
-            colorBgBase: "var(--nova-bg)",
-            colorBgContainer: "var(--nova-surface)",
-            colorBgElevated: "var(--nova-surface)",
-            colorBorder: "var(--nova-border)",
-            colorPrimary: "var(--nova-accent)",
-            colorText: "var(--nova-text)",
-            colorTextSecondary: "var(--nova-dim)",
-            borderRadius: 8,
-            fontFamily: "var(--font-display)",
-          },
-        }}
-      >
-
-        {contextHolder}
-        <div className="h-screen flex flex-col bg-nova-bg overflow-hidden relative">
-        <div className="fixed inset-0 pointer-events-none z-0">
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `
-                radial-gradient(ellipse 60% 40% at 10% 0%, rgba(0,229,255,0.04) 0%, transparent 60%),
-                radial-gradient(ellipse 50% 50% at 90% 100%, rgba(124,58,237,0.05) 0%, transparent 60%)
-              `,
-            }}
-          />
-        </div>
-
-        {/* ===== HEADER ===== */}
-        <header
-          className="relative z-10 flex items-center justify-between px-6 py-3 border-b border-nova-border"
-          style={{
-            background: "var(--nova-bg)",
-            backdropFilter: "blur(20px)",
-            opacity: 0.9,
+    <Suspense fallback={
+      <div className="h-screen flex items-center justify-center bg-nova-bg">
+        <div className="animate-pulse text-nova-accent">Loading NOVA...</div>
+      </div>
+    }>
+      <ThemeProvider>
+        <ConfigProvider
+          theme={{
+            algorithm: theme.darkAlgorithm,
+            token: {
+              colorBgBase: "var(--nova-bg)",
+              colorBgContainer: "var(--nova-surface)",
+              colorBgElevated: "var(--nova-surface)",
+              colorBorder: "var(--nova-border)",
+              colorPrimary: "var(--nova-accent)",
+              colorText: "var(--nova-text)",
+              colorTextSecondary: "var(--nova-dim)",
+              borderRadius: 8,
+              fontFamily: "var(--font-display)",
+            },
           }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className={`w-8 h-8 rounded-lg md:flex items-center justify-center text-sm font-bold ${messages.length === 0 ? 'hidden' : ''}`}
-            >
-              <Image src="/icons/logo-nova.svg" alt="Nova AI" width={32} height={32} preview={false}/>
-            </div>
-            <span className="font-display text-lg font-extrabold tracking-widest">
-              NO<span className="text-nova-accent">VA</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {/* Status badge */}
-            <div
-              className="flex items-center gap-2 font-mono text-[11px]"
-              style={{ color: "var(--nova-muted)" }}
-            >
-              <Badge
-                status="processing"
-                color={statusColor}
-                style={{ "--ant-badge-dot-size": "6px" } as React.CSSProperties}
-              />
-              {statusLabel}
-            </div>
-
-            {/* Action buttons */}
-            <ThemeSwitcher />
-            <Tooltip title="Clear chat">
-              <Button
-                type="text"
-                size="small"
-                icon={<DeleteOutlined />}
-                onClick={() => {
-                  stop();
-                  clearMessages();
-                  stopRecordingIfActive();
+          {contextHolder}
+          <div className="h-screen flex flex-col bg-nova-bg overflow-hidden relative">
+            <div className="fixed inset-0 pointer-events-none z-0">
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: `
+                    radial-gradient(ellipse 60% 40% at 10% 0%, rgba(0,229,255,0.04) 0%, transparent 60%),
+                    radial-gradient(ellipse 50% 50% at 90% 100%, rgba(124,58,237,0.05) 0%, transparent 60%)
+                  `,
                 }}
-                aria-label="Clear all messages"
-                style={{ color: "var(--nova-muted)" }}
-                disabled={messages.length === 0}
               />
-            </Tooltip>
-          </div>
-        </header>
-
-        {/* ===== MAIN CONTENT ===== */}
-        <div className="flex-1 flex justify-center relative z-10 max-h-[calc(100vh-60px)]">
-          <div className="w-full max-w-4xl flex flex-col h-full">
-            {/* ===== MESSAGES ===== */}
-            <div
-              className="flex-1 overflow-y-auto overflow-x-clip px-3 md:px-6 py-4 relative z-1 scroll-smooth"
-            >
-              {messages.length === 0 ? (
-                <div className="h-full w-full flex items-center justify-center">
-                  <WelcomeScreen
-                    onChipClick={(text) => {
-                      setInputText(text);
-                      sendMessage(text);
-                      setInputText("");
-                    }}
-                  />
-                </div>
-              ) : (
-                <>
-                  {messages.map((msg, index) => {
-                    return (
-                      <MessageBubble
-                        key={msg.id}
-                        message={msg}
-                        isStreaming={isStreaming && index === messages.length - 1}
-                        streamingDomRef={streamingDomRef}
-                        isPlaying={playingId === msg.id}
-                        isLoading={isVoiceStreaming && playingId === msg.id}
-                        onSpeak={speak}
-                        onStop={stop}
-                        onEditMessage={editMessage}
-                        onUpdateMessage={updateMessage}
-                        onRegenerateResponse={regenerateResponse}
-                      />
-                    );
-                  })}
-                  {isBusy && <TypingIndicator />}
-                </>
-              )}
-              <div ref={messagesEndRef} />
             </div>
 
-            {/* ===== INPUT AREA ===== */}
-            <InputArea
-              inputText={inputText}
-              setInputText={setInputText}
-              onSend={handleSend}
-              onMic={handleMic}
-              onStop={stopStreaming}
-              isRecording={isRecording}
-              isTranscribing={isTranscribing}
-              isStreaming={isStreaming}
-              isBusy={isBusy}
-            />
-          </div>
-        </div>
-      </div>
+            {/* ===== HEADER ===== */}
+            <header
+              className="relative z-10 flex items-center justify-between px-6 py-3 border-b border-nova-border"
+              style={{
+                background: "var(--nova-bg)",
+                backdropFilter: "blur(20px)",
+                opacity: 0.9,
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`w-8 h-8 rounded-lg md:flex items-center justify-center text-sm font-bold ${messages.length === 0 ? 'hidden' : ''}`}
+                >
+                  <Image src="/icons/logo-nova.svg" alt="Nova AI" width={32} height={32} preview={false}/>
+                </div>
+                <span className="font-display text-lg font-extrabold tracking-widest">
+                  NO<span className="text-nova-accent">VA</span>
+                </span>
+              </div>
 
-    </ConfigProvider>
-    </ThemeProvider>
+              <div className="flex items-center gap-4">
+                {/* Status badge */}
+                <div
+                  className="flex items-center gap-2 font-mono text-[11px]"
+                  style={{ color: "var(--nova-muted)" }}
+                >
+                  <Badge
+                    status="processing"
+                    color={statusColor}
+                    style={{ "--ant-badge-dot-size": "6px" } as React.CSSProperties}
+                  />
+                  {statusLabel}
+                </div>
+
+                {/* Action buttons */}
+                <ThemeSwitcher />
+                <Tooltip title="Clear chat">
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<DeleteOutlined />}
+                    onClick={() => {
+                      stop();
+                      clearMessages();
+                      stopRecordingIfActive();
+                    }}
+                    aria-label="Clear all messages"
+                    style={{ color: "var(--nova-muted)" }}
+                    disabled={messages.length === 0}
+                  />
+                </Tooltip>
+              </div>
+            </header>
+
+            {/* ===== MAIN CONTENT ===== */}
+            <div className="flex-1 flex justify-center relative z-10 max-h-[calc(100vh-60px)]">
+              <div className="w-full max-w-4xl flex flex-col h-full">
+                {/* ===== MESSAGES ===== */}
+                <div
+                  className="flex-1 overflow-y-auto overflow-x-clip px-3 md:px-6 py-4 relative z-1 scroll-smooth"
+                >
+                  {messages.length === 0 ? (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <Suspense fallback={<div className="animate-pulse bg-nova-surface rounded-lg h-40" />}>
+                        <WelcomeScreen
+                          onChipClick={(text) => {
+                            setInputText(text);
+                            sendMessage(text);
+                            setInputText("");
+                          }}
+                        />
+                      </Suspense>
+                    </div>
+                  ) : (
+                    <>
+                      {messages.map((msg, index) => {
+                        return (
+                          <Suspense key={msg.id} fallback={<div className="animate-pulse bg-nova-surface rounded-lg h-20 mb-2" />}>
+                            <MessageBubble
+                              message={msg}
+                              isStreaming={isStreaming && index === messages.length - 1}
+                              streamingDomRef={streamingDomRef}
+                              isPlaying={playingId === msg.id}
+                              isLoading={isVoiceStreaming && playingId === msg.id}
+                              onSpeak={speak}
+                              onStop={stop}
+                              onEditMessage={editMessage}
+                              onUpdateMessage={updateMessage}
+                              onRegenerateResponse={regenerateResponse}
+                            />
+                          </Suspense>
+                        );
+                      })}
+                      {isBusy && (
+                        <Suspense fallback={null}>
+                          <TypingIndicator />
+                        </Suspense>
+                      )}
+                    </>
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* ===== INPUT AREA ===== */}
+                <Suspense fallback={<div className="animate-pulse bg-nova-surface rounded-lg h-20" />}>
+                  <InputArea
+                    inputText={inputText}
+                    setInputText={setInputText}
+                    onSend={handleSend}
+                    onMic={handleMic}
+                    onStop={stopStreaming}
+                    isRecording={isRecording}
+                    isTranscribing={isTranscribing}
+                    isStreaming={isStreaming}
+                    isBusy={isBusy}
+                  />
+                </Suspense>
+              </div>
+            </div>
+          </div>
+        </ConfigProvider>
+      </ThemeProvider>
+    </Suspense>
   );
 }

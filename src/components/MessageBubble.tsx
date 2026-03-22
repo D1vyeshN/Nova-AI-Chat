@@ -1,6 +1,11 @@
 "use client";
 
-import { Button, Tag, Tooltip } from "antd";
+// Optimized antd imports
+import Button from "antd/es/button";
+import Tag from "antd/es/tag";
+import Tooltip from "antd/es/tooltip";
+import Input from "antd/es/input";
+// Standard icon imports (deep imports cause TypeScript issues)
 import {
   SoundOutlined,
   PauseOutlined,
@@ -16,7 +21,6 @@ import { Message } from "@/types";
 import { useEffect, useRef, useState } from "react";
 import clsx from "clsx";
 import { MarkdownRenderer } from "./MarkdownRenderer";
-import { Input } from "antd";
 
 // Language code to name mapping
 const LANGUAGE_NAMES: Record<string, string> = {
@@ -336,7 +340,7 @@ export function MessageBubble({
                             ? "!text-purple-400 !border-purple-500/30 !bg-purple-500/10"
                             : isPlaying
                               ? "!text-purple-400 !border-purple-500/30 !bg-purple-500/10"
-                              : "text-nova-muted !border-nova-muted hover:!text-cyan-400 hover:!border-cyan-500/30 hover:!bg-cyan-500/10",
+                              : "text-nova-muted border-nova-muted! hover:!text-cyan-400 hover:!border-cyan-500/30 hover:!bg-cyan-500/10",
                         )}
                       >
                         {isLoading ? (
