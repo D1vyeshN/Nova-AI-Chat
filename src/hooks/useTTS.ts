@@ -115,11 +115,31 @@ export function useTTS(selectedVoice?: Voice) {
   const isSpeakingRef = useRef(false);
   const currentIdRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const stop = useCallback(() => {
+    // Cancel any ongoing API request
+    if (abortControllerRef.current && !abortControllerRef.current.signal.aborted) {
+      try {
+        abortControllerRef.current.abort('aborted by user');
+      } catch (error) {
+        // Ignore abort errors - the request was already cancelled
+        console.debug('Abort controller already cancelled:', error);
+      }
+      abortControllerRef.current = null;
+    }
+    
     if (audioRef.current) {
       const audio = audioRef.current;
-      audio.pause();
+      // Reset event handlers first to prevent race conditions
+      audio.onended = null;
+      audio.onerror = null;
+      
+      // Stop audio playback gracefully
+      if (!audio.paused) {
+        audio.pause();
+      }
+      
       // Clean up the audio URL if it exists
       if (audio.src && audio.src.startsWith('blob:')) {
         URL.revokeObjectURL(audio.src);
@@ -141,6 +161,10 @@ export function useTTS(selectedVoice?: Voice) {
     async (text: string, messageId: string) => {
       const clean = stripToSpeakable(text);
       if (!clean) return;
+
+      // Create abort controller for this request
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
 
       setIsLoading(true);
       setIsVoiceStreaming(true);
@@ -199,7 +223,13 @@ export function useTTS(selectedVoice?: Voice) {
             response_format: "mp3",
             speed: 1.0,
           }),
+          signal: abortController.signal, // Add abort signal
         });
+
+        // Check if request was aborted
+        if (abortController.signal.aborted) {
+          throw new Error("Request was aborted");
+        }
 
         if (!response.ok) {
           throw new Error(`TTS API error: ${response.status}`);
@@ -211,6 +241,12 @@ export function useTTS(selectedVoice?: Voice) {
 
         // Create audio from direct stream
         const audioBlob = await response.blob();
+        
+        // Check if aborted during blob creation
+        if (abortController.signal.aborted) {
+          throw new Error("Request was aborted during audio processing");
+        }
+
         const audioUrl = URL.createObjectURL(audioBlob);
 
         const audio = new Audio(audioUrl);
@@ -243,9 +279,16 @@ export function useTTS(selectedVoice?: Voice) {
         }
         
       } catch (error) {
-        console.error("OpenAI Edge TTS error:", error);
+        // Don't log error if it was an intentional abort
+        if (error instanceof Error && error.message !== "Request was aborted" && error.message !== "Request was aborted during audio processing") {
+          console.error("OpenAI Edge TTS error:", error);
+        }
         stop();
       } finally {
+        // Clear abort controller reference
+        if (abortControllerRef.current === abortController) {
+          abortControllerRef.current = null;
+        }
         setIsLoading(false);
         setIsVoiceStreaming(false);
       }

@@ -123,8 +123,11 @@ export default function ChatPage() {
   const getStatusDisplay = (): { label: string; color: string } => {
     if (isRecording) return { label: "recording...", color: "#ef4444" };
     if (isTranscribing) return { label: "transcribing...", color: "#f59e0b" };
+    if (isLoading) return { label: "loading voice...", color: "#a78bfa" };
+    if (isVoiceStreaming) return { label: "generating voice...", color: "#a78bfa" };
     if (status === "thinking")
       return { label: "thinking...", color: "#00e5ff" };
+    if (isStreaming) return { label: "streaming...", color: "#00e5ff" };
     if (isSpeaking) return { label: "speaking...", color: "#a78bfa" };
     if (status === "error") return { label: "error", color: "#ef4444" };
     return { label: "ready", color: "#10b981" };
@@ -177,7 +180,7 @@ export default function ChatPage() {
         >
           <div className="flex items-center gap-3">
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
+              className={`w-8 h-8 rounded-lg md:flex items-center justify-center text-sm font-bold ${messages.length === 0 ? 'hidden' : ''}`}
             >
               <Image src="/icons/logo-nova.svg" alt="Nova AI" width={32} height={32} preview={false}/>
             </div>

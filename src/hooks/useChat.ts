@@ -70,7 +70,7 @@ export function useChat() {
 
   const stopStreaming = useCallback(() => {
     if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+      abortControllerRef.current.abort("aborted by user");
       abortControllerRef.current = null;
       stopTypingInterval();
       // ✅ Fix 2: discard unshown chars on abort
