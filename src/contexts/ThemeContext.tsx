@@ -2,63 +2,70 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "light" | "dark" | "system";
+type Theme = "light" | "dark";
 
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   resolvedTheme: "light" | "dark";
+  isLoaded: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("dark");
+  const getSystemTheme = (): Theme => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return "dark"; // Fallback for SSR
+  };
+
+  const [theme, setTheme] = useState<Theme>(getSystemTheme());
+  const [resolvedTheme, setResolvedTheme] = useState<Theme>(getSystemTheme());
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("nova-theme") as Theme;
-    if (saved && ["light", "dark", "system"].includes(saved)) {
+    if (saved && ["light", "dark"].includes(saved)) {
       setTheme(saved);
     }
+    setIsLoaded(true);
   }, []);
 
   useEffect(() => {
     localStorage.setItem("nova-theme", theme);
+  }, [theme]);
 
+  useEffect(() => {
+    // Apply theme immediately to prevent flash
     const root = document.documentElement;
     root.classList.remove("light", "dark");
-
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light";
-      root.classList.add(systemTheme);
-      setResolvedTheme(systemTheme);
-    } else {
-      root.classList.add(theme);
-      setResolvedTheme(theme);
-    }
+    root.classList.add(theme);
+    setResolvedTheme(theme);
   }, [theme]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     
     const handleChange = () => {
-      if (theme === "system") {
+      // Only auto-update if user hasn't manually set a preference
+      const saved = localStorage.getItem("nova-theme");
+      if (!saved) {
         const systemTheme = mediaQuery.matches ? "dark" : "light";
         document.documentElement.classList.remove("light", "dark");
         document.documentElement.classList.add(systemTheme);
+        setTheme(systemTheme);
         setResolvedTheme(systemTheme);
       }
     };
 
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [theme]);
+  }, []);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme }}>
+    <ThemeContext.Provider value={{ theme, setTheme, resolvedTheme, isLoaded }}>
       {children}
     </ThemeContext.Provider>
   );

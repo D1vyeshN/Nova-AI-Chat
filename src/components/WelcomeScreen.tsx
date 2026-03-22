@@ -1,16 +1,20 @@
 "use client";
 
-import { Tag } from "antd";
+import { Image, Tag } from "antd";
 
 interface Props {
   onChipClick: (text: string) => void;
 }
 
 const CHIPS = [
-  { emoji: "✨", text: "Tell me something interesting" },
-  { emoji: "🤖", text: "What can you do?" },
-  { emoji: "😄", text: "Tell me a short joke" },
-  { emoji: "🌍", text: "Explain quantum physics simply" },
+  { emoji: "💡", text: "Give me a creative idea" },
+  { emoji: "💻", text: "Teach me a useful tech tip" },
+  { emoji: "🌌", text: "Explain a mystery of the universe" },
+  { emoji: "🐶", text: "Tell me a cute animal fact" },
+  { emoji: "🍀", text: "Give me a life tip" },
+  { emoji: "🧩", text: "Give me a fun riddle" },
+  { emoji: "✈️", text: "Suggest a travel destination" },
+  { emoji: "📱", text: "Recommend a useful app" },
 ];
 
 export function WelcomeScreen({ onChipClick }: Props) {
@@ -20,21 +24,21 @@ export function WelcomeScreen({ onChipClick }: Props) {
       <div
         className="w-20 h-20 rounded-full flex items-center justify-center text-3xl relative"
         style={{
-          background: "radial-gradient(circle at 35% 35%, var(--nova-accent), var(--nova-accent2), transparent 70%)",
-          border: "1px solid var(--nova-accent)",
-          boxShadow: "0 0 40px var(--nova-accent), inset 0 0 20px var(--nova-accent)",
+          // background: "radial-gradient(circle at 35% 35%, var(--nova-accent), var(--nova-accent2), transparent 70%)",
+          // border: "1px solid var(--nova-accent)",
+          // boxShadow: "0 0 40px var(--nova-accent), inset 0 0 20px var(--nova-accent)",
           animation: "float 3s ease-in-out infinite",
         }}
       >
-        🎙️
-        <div
+        <Image src="/icons/logo-nova.svg" alt="NOVA" width={80} height={80} preview={false}/>
+        {/* <div
           className="absolute inset-0 rounded-full"
           style={{
             border: "1px solid var(--nova-accent)",
             animation: "float 3s ease-in-out infinite reverse",
             transform: "scale(1.15)",
           }}
-        />
+        /> */}
       </div>
 
       <div>
@@ -58,7 +62,6 @@ export function WelcomeScreen({ onChipClick }: Props) {
           </button>
         ))}
       </div>
-
     </div>
   );
 }

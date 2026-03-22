@@ -1,9 +1,76 @@
 @import "tailwindcss";
 
+@theme {
+  --color-nova-bg: var(--nova-bg);
+  --color-nova-surface: var(--nova-surface);
+  --color-nova-surface2: var(--nova-surface2);
+  --color-nova-border: var(--nova-border);
+  --color-nova-accent: var(--nova-accent);
+  --color-nova-accent2: var(--nova-accent2);
+  --color-nova-accent3: var(--nova-accent3);
+  --color-nova-text: var(--nova-text);
+  --color-nova-muted: var(--nova-muted);
+  --color-nova-dim: var(--nova-dim);
+  
+  --font-family-display: var(--font-display);
+  --font-family-mono: var(--font-mono);
+  
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-base: 16px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 24px;
+  --font-size-3xl: 30px;
+  --font-size-4xl: 36px;
+  
+  --animate-pulse-slow: pulse 3s ease-in-out infinite;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-typing: typing 1.2s ease infinite;
+}
+
 @layer base {
   :root {
-    --font-syne: 'Syne', sans-serif;
-    --font-dm-mono: 'DM Mono', monospace;
+    --font-sans: ui-sans-serif, -apple-system, "system-ui", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, "sans-serif", "Segoe UI Emoji", "Segoe UI Symbol";
+    --font-display: ui-sans-serif, -apple-system, "system-ui", "Segoe UI", Helvetica, "Apple Color Emoji", Arial, "sans-serif", "Segoe UI Emoji", "Segoe UI Symbol";
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+    
+    /* Typography System - Base Font Sizes */
+    --font-size-xs: 12px;
+    --font-size-sm: 14px;
+    --font-size-base: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-2xl: 24px;
+    --font-size-3xl: 30px;
+    --font-size-4xl: 36px;
+    
+    /* Typography System - Markdown Font Sizes */
+    --font-size-markdown-h1: 24px;
+    --font-size-markdown-h2: 20px;
+    --font-size-markdown-h3: 18px;
+    --font-size-markdown-h4: 16px;
+    --font-size-markdown-body: 16px;
+    --font-size-markdown-code: 16px;
+    --font-size-markdown-small: 14px;
+    
+    /* Typography System - Component Font Sizes */
+    --font-size-component-header: 20px;
+    --font-size-component-status: 11px;
+    --font-size-component-button: 14px;
+    --font-size-component-input: 14px;
+    --font-size-component-label: 12px;
+    
+    /* Typography System - Line Heights */
+    --line-height-tight: 1.25;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    
+    /* Typography System - Font Weights */
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
     
     /* Nova AI Dark Theme Variables (Default) */
     --nova-bg: #080b0f;
@@ -36,12 +103,15 @@
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
   }
 
   html, body {
     height: 100%;
     background: var(--nova-bg);
     color: var(--nova-text);
+    font-family: var(--font-sans);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   /* Custom scrollbar */
@@ -52,30 +122,47 @@
 }
 
 @layer utilities {
-  .font-display { font-family: var(--font-syne); }
-  .font-mono { font-family: var(--font-dm-mono); }
-
-  .text-nova-accent { color: var(--nova-accent); }
-  .text-nova-muted  { color: var(--nova-muted); }
-  .text-nova-dim    { color: var(--nova-dim); }
-  .text-nova-text   { color: var(--nova-text); }
-  .text-nova-accent { color: var(--nova-accent); }
-  .text-nova-muted  { color: var(--nova-muted); }
-  .text-nova-dim    { color: var(--nova-dim); }
-  .text-nova-text   { color: var(--nova-text); }
-  .text-nova-accent3 { color: var(--nova-accent3); }
-
-  .bg-nova-bg      { background: var(--nova-bg); }
-  .bg-nova-surface  { background: var(--nova-surface); }
-  .bg-nova-surface2 { background: var(--nova-surface2); }
-  .bg-nova-accent  { background: var(--nova-accent); }
-  .bg-nova-accent2 { background: var(--nova-accent2); }
-  .bg-nova-accent3 { background: var(--nova-accent3); }
-  .bg-nova-muted   { background: var(--nova-muted); }
-  .bg-nova-dim     { background: var(--nova-dim); }
-
-  .border-nova-border { border-color: var(--nova-border); }
-  .border-nova-accent { border-color: var(--nova-accent); }
+  /* Font Families */
+  .font-sans { font-family: var(--font-sans); }
+  .font-display { font-family: var(--font-display); }
+  .font-mono { font-family: var(--font-mono); }
+  
+  /* Base Font Sizes */
+  .text-xs { font-size: var(--font-size-xs); }
+  .text-sm { font-size: var(--font-size-sm); }
+  .text-base { font-size: var(--font-size-base); }
+  .text-lg { font-size: var(--font-size-lg); }
+  .text-xl { font-size: var(--font-size-xl); }
+  .text-2xl { font-size: var(--font-size-2xl); }
+  .text-3xl { font-size: var(--font-size-3xl); }
+  .text-4xl { font-size: var(--font-size-4xl); }
+  
+  /* Markdown Font Sizes */
+  .markdown-h1 { font-size: var(--font-size-markdown-h1); }
+  .markdown-h2 { font-size: var(--font-size-markdown-h2); }
+  .markdown-h3 { font-size: var(--font-size-markdown-h3); }
+  .markdown-h4 { font-size: var(--font-size-markdown-h4); }
+  .markdown-body { font-size: var(--font-size-markdown-body); }
+  .markdown-code { font-size: var(--font-size-markdown-code); }
+  .markdown-small { font-size: var(--font-size-markdown-small); }
+  
+  /* Component Font Sizes */
+  .component-header { font-size: var(--font-size-component-header); }
+  .component-status { font-size: var(--font-size-component-status); }
+  .component-button { font-size: var(--font-size-component-button); }
+  .component-input { font-size: var(--font-size-component-input); }
+  .component-label { font-size: var(--font-size-component-label); }
+  
+  /* Line Heights */
+  .leading-tight { line-height: var(--line-height-tight); }
+  .leading-normal { line-height: var(--line-height-normal); }
+  .leading-relaxed { line-height: var(--line-height-relaxed); }
+  
+  /* Font Weights */
+  .font-normal { font-weight: var(--font-weight-normal); }
+  .font-medium { font-weight: var(--font-weight-medium); }
+  .font-semibold { font-weight: var(--font-weight-semibold); }
+  .font-bold { font-weight: var(--font-weight-bold); }
 }
 
 /* Animations */
@@ -104,6 +191,7 @@
 .ant-modal-header,
 .ant-modal-footer {
   background: var(--nova-surface) !important;
+  transition: background-color 0.3s ease;
 }
 
 .ant-input,
@@ -112,12 +200,14 @@
   background: var(--nova-surface2) !important;
   border-color: var(--nova-border) !important;
   color: var(--nova-text) !important;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .ant-input-affix-wrapper:focus,
 .ant-input-affix-wrapper-focused {
   border-color: rgba(0, 229, 255, 0.5) !important;
   box-shadow: 0 0 0 2px rgba(0, 229, 255, 0.1) !important;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .ant-btn-primary {
@@ -125,6 +215,7 @@
   border-color: transparent !important;
   color: var(--nova-bg) !important;
   font-weight: 700;
+  transition: opacity 0.3s ease, box-shadow 0.3s ease;
 }
 
 .ant-btn-primary:hover {
@@ -133,7 +224,7 @@
 }
 
 .ant-tag {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-mono);
 }
 
 /* Textarea no resize */
@@ -143,6 +234,13 @@ textarea { resize: none !important; }
 .ant-notification-notice {
   background: var(--nova-surface) !important;
   border: 1px solid var(--nova-border) !important;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+.ant-dropdown-menu-item-selected{
+  background: var(--nova-border) !important;
+  color: var(--nova-text) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 

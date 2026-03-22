@@ -54,8 +54,7 @@ export default function ChatPage() {
     editMessage,
     regenerateResponse,
   } = useChat();
-  const { isRecording, isTranscribing, startRecording, stopRecording } =
-    useSTT();
+  const { isRecording, isTranscribing, startRecording, stopRecording, stopRecordingIfActive } = useSTT();
   const { 
     isSpeaking, 
     playingId, 
@@ -148,7 +147,7 @@ export default function ChatPage() {
             colorText: "var(--nova-text)",
             colorTextSecondary: "var(--nova-dim)",
             borderRadius: 8,
-            fontFamily: "'Syne', sans-serif",
+            fontFamily: "var(--font-display)",
           },
         }}
       >
@@ -211,7 +210,7 @@ export default function ChatPage() {
                 onClick={() => {
                   stop();
                   clearMessages();
-                  stopRecording();
+                  stopRecordingIfActive();
                 }}
                 style={{ color: "var(--nova-muted)" }}
                 disabled={messages.length === 0}
@@ -225,20 +224,18 @@ export default function ChatPage() {
           <div className="w-full max-w-4xl flex flex-col h-full">
             {/* ===== MESSAGES ===== */}
             <div
-              className="flex-1 overflow-y-auto overflow-x-clip px-3 md:px-6 py-4 space-y-4 relative z-1 scroll-smooth"
-              style={{
-                scrollbarWidth: "thin",
-                scrollbarColor: "#1e2530 transparent",
-              }}
+              className="flex-1 overflow-y-auto overflow-x-clip px-3 md:px-6 py-4 relative z-1 scroll-smooth"
             >
               {messages.length === 0 ? (
-                <WelcomeScreen
-                  onChipClick={(text) => {
-                    setInputText(text);
-                    sendMessage(text);
-                    setInputText("");
-                  }}
-                />
+                <div className="h-full w-full flex items-center justify-center">
+                  <WelcomeScreen
+                    onChipClick={(text) => {
+                      setInputText(text);
+                      sendMessage(text);
+                      setInputText("");
+                    }}
+                  />
+                </div>
               ) : (
                 <>
                   {messages.map((msg, index) => {

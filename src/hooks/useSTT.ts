@@ -7,14 +7,24 @@ export function useSTT() {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const stopInProgressRef = useRef(false);
 
   const startRecording = useCallback(async () => {
     try {
-      // Clean up any existing recorder
+      // Clean up any existing recorder first
       if (mediaRecorderRef.current) {
         const existingRecorder = mediaRecorderRef.current;
         if (existingRecorder.state !== 'inactive') {
           existingRecorder.stop();
+        }
+        // Stop all tracks to ensure clean state
+        try {
+          const stream = existingRecorder.stream;
+          if (stream) {
+            stream.getTracks().forEach((t) => t.stop());
+          }
+        } catch (e) {
+          // Ignore stream cleanup errors
         }
         mediaRecorderRef.current = null;
       }
@@ -32,38 +42,60 @@ export function useSTT() {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
 
+      // Handle unexpected recorder stops
+      recorder.onstop = () => {
+        // Only reset if this is still the active recorder AND we're not in controlled stop
+        if (mediaRecorderRef.current === recorder && !stopInProgressRef.current) {
+          setIsRecording(false);
+          mediaRecorderRef.current = null;
+        }
+      };
+
       recorder.start();
       setIsRecording(true);
-    } catch {
-      throw new Error("Microphone access denied");
+    } catch (err) {
+      // Ensure clean state on error
+      setIsRecording(false);
+      mediaRecorderRef.current = null;
+      if (err instanceof Error && err.name === 'NotAllowedError') {
+        throw new Error("Microphone access denied");
+      }
+      throw new Error("Failed to start recording");
     }
   }, []);
 
   const stopRecording = useCallback((): Promise<string> => {
     return new Promise((resolve, reject) => {
       const recorder = mediaRecorderRef.current;
+      
+      // Check if we have a recorder and it's in a valid state
       if (!recorder) {
-        // If no recorder, ensure states are reset and reject
+        // If no recorder, ensure states are reset and resolve with empty string
         setIsRecording(false);
         setIsTranscribing(false);
-        return reject("No active recording");
+        return resolve("");
       }
 
-      // Check actual recorder state instead of React state
-      if (recorder.state !== 'recording') {
-        return reject("Not recording");
-      }
-
-      recorder.onstop = async () => {
-        const stream = recorder.stream;
-        stream.getTracks().forEach((t) => t.stop());
-        
-        // Clear the recorder reference
-        mediaRecorderRef.current = null;
+      // Check actual recorder state
+      if (recorder.state === 'inactive') {
         setIsRecording(false);
-        setIsTranscribing(true);
+        return resolve("");
+      }
 
+      // Set flag to prevent race condition with unexpected onstop
+      stopInProgressRef.current = true;
+
+      // Set up the stop handler before calling stop() to avoid race conditions
+      recorder.onstop = async () => {
         try {
+          const stream = recorder.stream;
+          stream.getTracks().forEach((t) => t.stop());
+          
+          // Clear the recorder reference
+          mediaRecorderRef.current = null;
+          setIsRecording(false);
+          setIsTranscribing(true);
+
           const blob = new Blob(chunksRef.current, { type: "audio/webm" });
           const formData = new FormData();
           formData.append("audio", blob, "audio.webm");
@@ -77,12 +109,36 @@ export function useSTT() {
           reject(err instanceof Error ? err.message : "Transcription error");
         } finally {
           setIsTranscribing(false);
+          // Clear chunks for next recording
+          chunksRef.current = [];
+          // Reset stop flag
+          stopInProgressRef.current = false;
         }
       };
 
-      recorder.stop();
+      // Stop the recorder
+      try {
+        recorder.stop();
+      } catch (err) {
+        // If stop fails, clean up and reject
+        setIsRecording(false);
+        mediaRecorderRef.current = null;
+        stopInProgressRef.current = false;
+        reject(err instanceof Error ? err.message : "Failed to stop recording");
+      }
     });
-  }, [isRecording]);
+  }, []);
+
+  // Safe stop function that doesn't reject when no recording is active
+  const stopRecordingIfActive = useCallback((): Promise<string> => {
+    const recorder = mediaRecorderRef.current;
+    if (!recorder || recorder.state === 'inactive') {
+      setIsRecording(false);
+      setIsTranscribing(false);
+      return Promise.resolve("");
+    }
+    return stopRecording();
+  }, [stopRecording]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -94,5 +150,5 @@ export function useSTT() {
     };
   }, []);
 
-  return { isRecording, isTranscribing, startRecording, stopRecording };
+  return { isRecording, isTranscribing, startRecording, stopRecording, stopRecordingIfActive };
 }

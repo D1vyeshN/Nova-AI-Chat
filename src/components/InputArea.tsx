@@ -81,6 +81,7 @@ export function InputArea({
             style={{
               background: "rgba(239,68,68,0.15)",
               border: "1px solid #ef4444",
+              transition: "background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease",
             }}
           >
             {/* stop square */}
@@ -100,7 +101,7 @@ export function InputArea({
             disabled={isBusy}
             className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all disabled:opacity-40"
             style={{
-              background: "linear-gradient(135deg, #00e5ff, #00b4d8)",
+              background: "linear-gradient(135deg, var(--nova-accent), #00b4d8)",
               border: "none",
               boxShadow: "0 0 16px rgba(0,229,255,0.25)",
             }}
@@ -111,7 +112,7 @@ export function InputArea({
               height="16"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#080b0f"
+              stroke="var(--nova-bg)"
               strokeWidth="2.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -142,6 +143,7 @@ export function InputArea({
               : "var(--nova-surface)",
             border: `1px solid ${isRecording ? "#ef4444" : "var(--nova-border)"}`,
             boxShadow: isRecording ? "0 0 12px rgba(239,68,68,0.3)" : "none",
+            transition: "background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease",
           }}
         >
           {isRecording ? (
@@ -180,19 +182,21 @@ export function InputArea({
       {/* ── input area — switches between textarea and waveform ── */}
       <div
         className={clsx(
-          "flex items-end gap-2 p-2 w-full rounded-xl border overflow-hidden transition-all relative min-h-fit max-h-full",
+          "flex items-end gap-2 p-2 w-full rounded-xl border overflow-hidden relative min-h-fit max-h-full",
           "border-nova-border focus-within:border-nova-accent/40 shadow-lg",
         )}
         style={{
           background: "var(--nova-surface)",
+          transition: "background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease",
           // boxShadow: "0px 2px 6px var(--nova-border)",
         }}
       >
         <div className={clsx(
-          "flex items-center w-full overflow-hidden transition-all relative min-h-fit max-h-full",
+          "flex items-center w-full overflow-hidden relative min-h-fit max-h-full",
         )}
         style={{
           background: "var(--nova-surface)",
+          transition: "background-color 0.3s ease",
           // boxShadow: "0px 2px 6px var(--nova-border)",
         }}>
         {isRecording ? (
@@ -221,7 +225,7 @@ export function InputArea({
             placeholder="Type a message or press the mic..."
             disabled={isBusy}
             rows={1}
-            className="w-full h-full border-none bg-transparent outline-none resize-none disabled:opacity-50 p-2"
+            className="w-full h-full border-none bg-transparent outline-none resize-none disabled:opacity-50 p-2 placeholder:text-nova-muted"
             style={{
               color: "var(--nova-text)",
               fontFamily: "'Syne', sans-serif",
@@ -230,6 +234,7 @@ export function InputArea({
               lineHeight: "1.5",
               minHeight: "40px",
               maxHeight: "260px",
+              transition: "color 0.3s ease",
               // height: "260px",
             }}
           />

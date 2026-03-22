@@ -67,7 +67,7 @@ function CodeBlock({
               size="small"
               icon={copied ? <CheckOutlined /> : <CopyOutlined />}
               onClick={handleCopy}
-              className="!h-6 !px-2 !text-[11px] transition-all"
+              className="!h-6 !px-2 component-status transition-all"
               style={{
                 color: copied ? "var(--nova-accent3)" : "var(--nova-muted)",
                 fontFamily: "'Syne', sans-serif",
@@ -81,7 +81,7 @@ function CodeBlock({
         {/* ✅ Render children directly — preserves hljs <span> highlighting */}
         <div className="overflow-x-auto">
           <pre className="p-3.5 m-0 bg-transparent">
-            <code className="font-mono text-[14px] leading-relaxed block">
+            <code className="font-mono markdown-code leading-relaxed block">
               {children}
             </code>
           </pre>
@@ -123,25 +123,25 @@ const components: Components = {
     }
 
     return (
-      <code className="px-1.5 py-0.5 rounded font-mono text-[14px] text-nova-text bg-nova-muted">
+      <code className="px-1.5 py-0.5 rounded font-mono markdown-code text-nova-text bg-nova-border">
         {children}
       </code>
     );
   },
 
   // ── Headings ────────────────────────────────────────────────────────────────
-  h1: (p) => <h1 className="text-nova-text font-semibold text-[22px] mt-5 mb-2 leading-snug">{p.children}</h1>,
-  h2: (p) => <h2 className="text-nova-text font-semibold text-[18px] mt-5 mb-2 leading-snug">{p.children}</h2>,
-  h3: (p) => <h3 className="text-nova-text font-semibold text-[16px] mt-4 mb-1.5 leading-snug">{p.children}</h3>,
-  h4: (p) => <h4 className="text-nova-text font-semibold text-[15px] mt-3 mb-1 leading-snug">{p.children}</h4>,
+  h1: (p) => <h1 className="text-nova-text font-semibold markdown-h1 mt-5 mb-2 leading-snug">{p.children}</h1>,
+  h2: (p) => <h2 className="text-nova-text font-semibold markdown-h2 mt-5 mb-2 leading-snug">{p.children}</h2>,
+  h3: (p) => <h3 className="text-nova-text font-semibold markdown-h3 mt-4 mb-1.5 leading-snug">{p.children}</h3>,
+  h4: (p) => <h4 className="text-nova-text font-semibold markdown-h4 mt-3 mb-1 leading-snug">{p.children}</h4>,
 
   // ── Paragraph ───────────────────────────────────────────────────────────────
-  p: (p) => <p className="mb-3 px-1 last:mb-0 text-nova-text leading-relaxed text-[15px]">{p.children}</p>,
+  p: (p) => <p className="mb-3 px-1 last:mb-0 text-nova-text leading-relaxed markdown-body">{p.children}</p>,
 
   // ── Lists ───────────────────────────────────────────────────────────────────
-  ul: (p) => <ul className="pl-10 pr-1 my-2 mb-3 space-y-1 list-disc marker:text-nova-accent">{p.children}</ul>,
-  ol: (p) => <ol className="pl-10 pr-1 my-2 mb-3 space-y-1 list-decimal marker:text-nova-accent">{p.children}</ol>,
-  li: (p) => <li className="text-nova-text wrap-break-word leading-relaxed text-[15px]">{p.children}</li>,
+  ul: (p) => <ul className="pl-10 pr-1 my-2 mb-3 space-y-1 list-disc marker:text-nova-text marker:font-semibold">{p.children}</ul>,
+  ol: (p) => <ol className="pl-10 pr-1 my-2 mb-3 space-y-1 list-decimal marker:text-nova-text marker:font-semibold">{p.children}</ol>,
+  li: (p) => <li className="text-nova-text wrap-break-word leading-relaxed markdown-body">{p.children}</li>,
 
   // ── Blockquote ──────────────────────────────────────────────────────────────
   blockquote: (p) => (
@@ -153,12 +153,12 @@ const components: Components = {
   // ── Table ───────────────────────────────────────────────────────────────────
   table: (p) => (
     <div className="overflow-x-auto my-3 rounded-lg border border-nova-border">
-      <table className="w-full text-[15px] border-collapse">{p.children}</table>
+      <table className="w-full markdown-body border-collapse">{p.children}</table>
     </div>
   ),
   thead: (p) => <thead className="bg-nova-surface">{p.children}</thead>,
   th: (p) => <th className="px-3.5 py-2.5 text-left text-nova-text font-semibold border-b border-nova-border">{p.children}</th>,
-  td: (p) => <td className="px-3.5 py-2 text-nova-dim text-[15px] border-b border-nova-border/50 last:border-b-0">{p.children}</td>,
+  td: (p) => <td className="px-3.5 py-2 text-nova-dim markdown-body border-b border-nova-border/50 last:border-b-0">{p.children}</td>,
   tr: (p) => <tr className="hover:bg-nova-surface/50 transition-colors">{p.children}</tr>,
 
   // ── HR ──────────────────────────────────────────────────────────────────────

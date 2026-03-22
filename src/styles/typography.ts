@@ -1,5 +1,3 @@
-// src/styles/typography.ts
-
 // Global typography system for Nova AI
 // Centralized text sizes for consistent scaling across the project
 
@@ -16,13 +14,13 @@ export const novaTypography = {
 
   // Markdown-specific sizes
   markdown: {
-    h1: "22px",
-    h2: "18px", 
-    h3: "16px",
-    h4: "15px",
-    body: "15px",
-    code: "14px",
-    small: "12px",
+    h1: "24px",
+    h2: "20px", 
+    h3: "18px",
+    h4: "16px",
+    body: "16px",
+    code: "16px",
+    small: "14px",
   },
 
   // Component-specific sizes
@@ -48,6 +46,46 @@ export const novaTypography = {
     semibold: "600", 
     bold: "700",
   },
+};
+
+// CSS Custom Properties for global usage
+export const novaCSSVars = {
+  // Base font sizes
+  "--font-size-xs": novaTypography.xs,
+  "--font-size-sm": novaTypography.sm,
+  "--font-size-base": novaTypography.base,
+  "--font-size-lg": novaTypography.lg,
+  "--font-size-xl": novaTypography.xl,
+  "--font-size-2xl": novaTypography["2xl"],
+  "--font-size-3xl": novaTypography["3xl"],
+  "--font-size-4xl": novaTypography["4xl"],
+  
+  // Markdown-specific sizes
+  "--font-size-markdown-h1": novaTypography.markdown.h1,
+  "--font-size-markdown-h2": novaTypography.markdown.h2,
+  "--font-size-markdown-h3": novaTypography.markdown.h3,
+  "--font-size-markdown-h4": novaTypography.markdown.h4,
+  "--font-size-markdown-body": novaTypography.markdown.body,
+  "--font-size-markdown-code": novaTypography.markdown.code,
+  "--font-size-markdown-small": novaTypography.markdown.small,
+  
+  // Component-specific sizes
+  "--font-size-component-header": novaTypography.components.header,
+  "--font-size-component-status": novaTypography.components.status,
+  "--font-size-component-button": novaTypography.components.button,
+  "--font-size-component-input": novaTypography.components.input,
+  "--font-size-component-label": novaTypography.components.label,
+  
+  // Line heights
+  "--line-height-tight": novaTypography.lineHeight.tight,
+  "--line-height-normal": novaTypography.lineHeight.normal,
+  "--line-height-relaxed": novaTypography.lineHeight.relaxed,
+  
+  // Font weights
+  "--font-weight-normal": novaTypography.fontWeight.normal,
+  "--font-weight-medium": novaTypography.fontWeight.medium,
+  "--font-weight-semibold": novaTypography.fontWeight.semibold,
+  "--font-weight-bold": novaTypography.fontWeight.bold,
 };
 
 // Tailwind-compatible font size classes
@@ -77,4 +115,44 @@ export const novaFontSizes = {
   "component-button": novaTypography.components.button,
   "component-input": novaTypography.components.input,
   "component-label": novaTypography.components.label,
+};
+
+// CSS class names for global usage
+export const novaFontClasses = {
+  // Base size classes
+  "text-xs": "font-size: var(--font-size-xs)",
+  "text-sm": "font-size: var(--font-size-sm)",
+  "text-base": "font-size: var(--font-size-base)",
+  "text-lg": "font-size: var(--font-size-lg)",
+  "text-xl": "font-size: var(--font-size-xl)",
+  "text-2xl": "font-size: var(--font-size-2xl)",
+  "text-3xl": "font-size: var(--font-size-3xl)",
+  "text-4xl": "font-size: var(--font-size-4xl)",
+  
+  // Markdown classes
+  "markdown-h1": "font-size: var(--font-size-markdown-h1)",
+  "markdown-h2": "font-size: var(--font-size-markdown-h2)",
+  "markdown-h3": "font-size: var(--font-size-markdown-h3)",
+  "markdown-h4": "font-size: var(--font-size-markdown-h4)",
+  "markdown-body": "font-size: var(--font-size-markdown-body)",
+  "markdown-code": "font-size: var(--font-size-markdown-code)",
+  "markdown-small": "font-size: var(--font-size-markdown-small)",
+  
+  // Component classes
+  "component-header": "font-size: var(--font-size-component-header)",
+  "component-status": "font-size: var(--font-size-component-status)",
+  "component-button": "font-size: var(--font-size-component-button)",
+  "component-input": "font-size: var(--font-size-component-input)",
+  "component-label": "font-size: var(--font-size-component-label)",
+  
+  // Line height classes
+  "leading-tight": "line-height: var(--line-height-tight)",
+  "leading-normal": "line-height: var(--line-height-normal)",
+  "leading-relaxed": "line-height: var(--line-height-relaxed)",
+  
+  // Font weight classes
+  "font-normal": "font-weight: var(--font-weight-normal)",
+  "font-medium": "font-weight: var(--font-weight-medium)",
+  "font-semibold": "font-weight: var(--font-weight-semibold)",
+  "font-bold": "font-weight: var(--font-weight-bold)",
 };

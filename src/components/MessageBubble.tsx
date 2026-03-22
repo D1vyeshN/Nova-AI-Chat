@@ -23,7 +23,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
   en: "English",
   // Indian Languages (priority order)
   hi: "Hindi",
-  bn: "Bengali", 
+  bn: "Bengali",
   ta: "Tamil",
   te: "Telugu",
   mr: "Marathi",
@@ -34,7 +34,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
   or: "Odia",
   as: "Assamese",
   // European Languages
-  es: "Spanish", 
+  es: "Spanish",
   fr: "French",
   de: "German",
   it: "Italian",
@@ -104,6 +104,13 @@ export function MessageBubble({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const el = e.target;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+    el.style.width = "100%";
+    setEditText(el.value);
+  };
   const handleEdit = () => {
     setEditText(message.content);
     onEditMessage?.(message.id, true);
@@ -142,15 +149,25 @@ export function MessageBubble({
       // ✅ Register this span as the direct write target
       streamingDomRef.current = spanRef.current;
       // Seed it with whatever content exists already
-      spanRef.current.textContent = message.content;
+      try {
+        if (spanRef.current) {
+          spanRef.current.textContent = message.content;
+        }
+      } catch (error) {
+        console.warn('Error setting text content:', error);
+      }
     }
     return () => {
       // ✅ Unregister when this bubble is no longer streaming
-      if (streamingDomRef.current === spanRef.current) {
-        streamingDomRef.current = null;
+      try {
+        if (streamingDomRef.current === spanRef.current) {
+          streamingDomRef.current = null;
+        }
+      } catch (error) {
+        console.warn('Error cleaning up streaming ref:', error);
       }
     };
-  }, [messageStreaming, message.content, streamingDomRef]);
+  }, [messageStreaming, message.content]); // Remove streamingDomRef from dependencies
 
   const displayContent = isAI && !isError ? "" : message.content;
 
@@ -159,11 +176,20 @@ export function MessageBubble({
     minute: "2-digit",
   });
 
+  useEffect(() => {
+    if (message.isEditing && textAreaRef.current) {
+      const el = textAreaRef.current;
+      el.style.height = "auto";
+      el.style.width = "100%";
+      el.style.height = el.scrollHeight + "px";
+    }
+  }, [message.isEditing]);
+
   return (
     <div
       className={clsx(
         "flex gap-3 group",
-        isAI ? "justify-start" : "justify-end",
+        isAI ? "justify-start mt-6" : "justify-end w-full",
       )}
     >
       {/* Avatar */}
@@ -175,10 +201,7 @@ export function MessageBubble({
       )} */}
 
       <div
-        className={clsx(
-          "flex flex-col gap-1 max-w-full",
-          !isAI && "items-end max-w-xl",
-        )}
+        className={clsx("flex flex-col gap-1 ", !isAI && "items-end w-full")}
       >
         {/* Meta */}
         {/* <div className={clsx("flex items-center gap-2 font-mono text-[10px] text-nova-muted",
@@ -191,149 +214,167 @@ export function MessageBubble({
         <div
           className={clsx(
             "rounded-xl text-sm leading-relaxed",
-            isAI ? "bg-transparent border-0 pt-0" : "rounded-tr-sm",
+            isAI ? "bg-transparent border-0 pt-0" : "rounded-tr-sm w-full",
             isError && "border-red-500/30 bg-red-500/5",
           )}
-          // style={
-          //   !isAI
-          //     ? {
-          //         background: "#1a2035",
-          //         borderColor: "rgba(0,229,255,0.15)",
-          //       }
-          //     : undefined
-          // }
         >
-          <div
-            className={clsx(
-              "flex items-center py-2 rounded-xl text-sm leading-relaxed text-justify",
-              isAI ? "bg-transparent border-0 pt-0 px-0 md:px-2" : "border rounded-br-sm md:mr-2 px-4 w-fit",
-              isError && "border-red-500/30 bg-red-500/5",
-            )}
-            style={
-              !isAI
-                ? {
-                    background: "var(--nova-surface2)",
-                    borderColor: "var(--nova-accent)",
-                  }
-                : undefined
-            }
-          >
-            {/* <p className="text-nova-text whitespace-pre-wrap">{displayContent}</p> */}
-            {/* ✅ span is the direct DOM write target during stream */}
-            {message.isEditing ? (
-              <textarea
-                ref={textAreaRef}
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                rows={1}
-                placeholder="Edit your message..."
-                className="w-full h-full bg-transparent border-none outline-none resize-none disabled:opacity-50"
-              style={{
-                color: "var(--nova-text)",
-                fontFamily: "'Syne', sans-serif",
-                fontSize: 14,
-                padding: "0px 0px",
-                // lineHeight: "1.5",
-                minHeight: "22px",
-                maxHeight: "260px",
-              }}
-              
-              />
-            ) : messageStreaming ? (
-              // During stream: still write directly to DOM for perf,
-              // but wrap in markdown on final commit
-              <span ref={spanRef} style={{ whiteSpace: "pre-wrap" }} />
-            ) : isAI ? (
-              <MarkdownRenderer content={message.content} />
-            ) : (
-              <span style={{ whiteSpace: "pre-wrap" }}>{message.content}</span>
-            )}
+          <div className="flex w-full justify-end">
+            <div
+              className={clsx(
+                "flex items-center py-2 rounded-xl text-sm leading-relaxed text-justify",
+                isAI
+                  ? "bg-transparent border-0 pt-0 px-0 md:pl-2"
+                  : message.isEditing ? "border rounded-br-sm md:mr-2 px-4 w-full max-w-[75%]" : "border rounded-br-sm md:mr-2 px-4 w-fit max-w-[75%]",
+                isError && "border-red-500/30 bg-red-500/5",
+              )}
+              style={
+                !isAI
+                  ? {
+                      background: "var(--nova-surface2)",
+                      borderColor: "var(--nova-accent)",
+                      transition:
+                        "background-color 0.3s ease, border-color 0.3s ease",
+                    }
+                  : {
+                      transition:
+                        "background-color 0.3s ease, border-color 0.3s ease",
+                    }
+              }
+            >
+              {/* <p className="text-nova-text whitespace-pre-wrap">{displayContent}</p> */}
+              {/* ✅ span is the direct DOM write target during stream */}
+              {message.isEditing ? (
+                <textarea
+                  ref={textAreaRef}
+                  value={editText}
+                  onChange={handleInput}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Edit your message..."
+                  className="w-full h-full bg-transparent border-none outline-none disabled:opacity-50"
+                  style={{
+                    color: "var(--nova-text)",
+                    fontFamily: "'Syne', sans-serif",
+                    fontSize: 14,
+                    transition: "color 0.3s ease",
+                    minHeight: "40px",
+                    maxHeight: "260px",
+                  }}
+                />
+              ) : messageStreaming ? (
+                // During stream: still write directly to DOM for perf,
+                // but wrap in markdown on final commit
+                <span
+                  ref={spanRef}
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    color: "var(--nova-text)",
+                    transition: "color 0.3s ease",
+                  }}
+                />
+              ) : isAI ? (
+                <MarkdownRenderer content={message.content} />
+              ) : (
+                <span
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    color: "var(--nova-text)",
+                    transition: "color 0.3s ease",
+                  }}
+                >
+                  {message.content}
+                </span>
+              )}
 
-            {messageStreaming && <span className="streaming-cursor" />}
+              {messageStreaming && <span className="streaming-cursor" />}
+            </div>
           </div>
 
           {/* Action buttons */}
           <div
-            className={`flex ${isAI ? "" : "justify-end"} gap-2 mt-2 `}
+            className={`flex ${isAI ? "ml-2" : "justify-end mr-2"} gap-2 mt-2`}
           >
             {message.isEditing ? (
-              <>
-                <Tooltip title="Save (Enter)" placement="bottom">
-                  <Button
-                    size="small"
-                    type="text"
-                    icon={<CheckOutlined />}
-                    onClick={handleSaveEdit}
-                    className="font-mono text-[10px] h-6 flex items-center gap-1 transition-all text-green-400 hover:text-green-300"
-                  />
-                </Tooltip>
-                <Tooltip title="Cancel (Esc)" placement="bottom">
-                  <Button
-                    size="small"
-                    type="text"
-                    icon={<CloseOutlined />}
-                    onClick={handleCancelEdit}
-                    className="font-mono text-[10px] h-6 flex items-center gap-1 transition-all text-red-400 hover:text-red-300"
-                  />
-                </Tooltip>
-              </>
-            ) : (!messageStreaming && (
-              <>
-                {isAI && !isError && (
-                  <Tooltip title={isPlaying ? "Stop speaking" : "Play voice"} placement="bottom">
-                    <Button
-                      size="small"
-                      type="text"
-                      icon={
-                        isLoading ? (
+              <div className="flex gap-2">
+                <Button
+                  size="small"
+                  type="text"
+                  onClick={handleCancelEdit}
+                  className="font-mono component-label h-6 flex items-center gap-1 transition-all !border-nova-muted"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="small"
+                  type="text"
+                  onClick={handleSaveEdit}
+                  className="font-mono component-label h-6 flex items-center gap-1 transition-all !border-nova-muted !bg-nova-border"
+                >
+                  Save
+                </Button>
+              </div>
+            ) : (
+              !messageStreaming && (
+                <>
+                  {isAI && !isError && (
+                    <Tooltip
+                      title={isPlaying ? "Stop speaking" : "Play voice"}
+                      placement="bottom"
+                    >
+                      <Button
+                        size="small"
+                        onClick={() =>
+                          isPlaying
+                            ? onStop()
+                            : onSpeak(message.content, message.id)
+                        }
+                        className={clsx(
+                          "flex items-center justify-center font-mono component-label h-6 w-6 gap-1 transition-all",
+                          isLoading
+                            ? "!text-purple-400 !border-purple-500/30 !bg-purple-500/10"
+                            : isPlaying
+                              ? "!text-purple-400 !border-purple-500/30 !bg-purple-500/10"
+                              : "text-nova-muted !border-nova-muted hover:!text-cyan-400 hover:!border-cyan-500/30 hover:!bg-cyan-500/10",
+                        )}
+                      >
+                        {isLoading ? (
                           <LoadingOutlined spin />
                         ) : isPlaying ? (
                           <PauseOutlined />
                         ) : (
                           <SoundOutlined />
-                        )
-                      }
-                      onClick={() => isPlaying ? onStop() : onSpeak(message.content, message.id)}
-                      className={clsx(
-                        "font-mono text-[10px] h-6 flex items-center gap-1 transition-all",
-                        isLoading
-                          ? "text-purple-400 border-purple-500/30 bg-purple-500/10"
-                          : isPlaying
-                          ? "text-blue-400 border-blue-500/30 bg-blue-500/10"
-                          : "text-nova-muted hover:text-blue-400 hover:border-blue-500/30 hover:bg-blue-500/10",
-                      )}
-                      style={{ borderColor: isPlaying || isLoading ? undefined : "transparent" }}
-                    />
-                  </Tooltip>
-                )}
-                {!isAI && (
-                  <Tooltip title="Edit message" placement="bottom">
+                        )}
+                      </Button>
+                    </Tooltip>
+                  )}
+                  {!isAI && (
+                    <Tooltip title="Edit message" placement="bottom">
+                      <Button
+                        size="small"
+                        icon={<EditOutlined />}
+                        onClick={handleEdit}
+                        className="size-1 flex items-center transition-all text-nova-muted !border-nova-muted hover:!text-cyan-400 hover:!border-cyan-500/30 hover:!bg-cyan-500/10"
+                        // style={{ borderColor: "transparent" }}
+                      />
+                    </Tooltip>
+                  )}
+                  <Tooltip
+                    title={copied ? "✓ Copied" : "Copy"}
+                    placement="bottom"
+                  >
                     <Button
                       size="small"
-                      type="text"
-                      icon={<EditOutlined />}
-                      onClick={handleEdit}
-                      className="font-mono text-[10px] h-6 flex items-center gap-1 transition-all text-nova-muted hover:text-yellow-400 hover:border-yellow-500/30 hover:bg-yellow-500/10"
-                      style={{ borderColor: "transparent" }}
-                    />
+                      onClick={handleCopy}
+                      className={clsx(
+                        "flex items-center justify-center font-mono component-label h-6 w-6 gap-1 transition-all",
+                        "text-nova-muted !border-nova-muted hover:!text-purple-400 hover:!border-purple-500/30 hover:!bg-purple-500/10",
+                      )}
+                    >
+                      {copied ? <CheckOutlined /> : <CopyOutlined />}
+                    </Button>
                   </Tooltip>
-                )}
-                <Tooltip title={copied ? "✓ Copied" : "Copy"} placement="bottom">
-                  <Button
-                    size="small"
-                    type="text"
-                    icon={copied ? <CheckOutlined /> : <CopyOutlined />}
-                    onClick={handleCopy}
-                    className={clsx(
-                      "font-mono text-[10px] h-6 flex items-center gap-1 transition-all",
-                      "text-nova-muted hover:text-purple-400 hover:border-purple-500/30 hover:bg-purple-500/10",
-                    )}
-                    style={{ borderColor: isPlaying ? undefined : "transparent" }}
-                  />
-                </Tooltip>
-              </>
-            ))}
+                </>
+              )
+            )}
           </div>
         </div>
       </div>

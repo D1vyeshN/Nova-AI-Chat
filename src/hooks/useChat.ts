@@ -30,7 +30,11 @@ export function useChat() {
       displayedRef.current += batch;
 
       if (streamingDomRef.current) {
-        streamingDomRef.current.textContent = displayedRef.current;
+        try {
+          streamingDomRef.current.textContent = displayedRef.current;
+        } catch (error) {
+          console.warn('Error updating streaming DOM:', error);
+        }
       }
     }, 16);
   }
@@ -50,7 +54,11 @@ export function useChat() {
     const remaining = charQueueRef.current.splice(0).join("");
     displayedRef.current += remaining;
     if (streamingDomRef.current) {
-      streamingDomRef.current.textContent = displayedRef.current;
+      try {
+        streamingDomRef.current.textContent = displayedRef.current;
+      } catch (error) {
+        console.warn('Error updating streaming DOM in flushQueue:', error);
+      }
     }
   }
 
