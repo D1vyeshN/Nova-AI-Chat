@@ -69,14 +69,22 @@ export function useChat() {
   }
 
   const stopStreaming = useCallback(() => {
+    // Abort any ongoing chat request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort("aborted by user");
       abortControllerRef.current = null;
-      stopTypingInterval();
-      // ✅ Fix 2: discard unshown chars on abort
-      // commit only what was actually displayed, not full accumulatedRef
-      discardQueue();
     }
+    
+    // Stop typing animation
+    stopTypingInterval();
+    discardQueue();
+    
+    // Reset all streaming states
+    setIsStreaming(false);
+    setStatus("idle");
+    streamingDomRef.current = null;
+    accumulatedRef.current = "";
+    displayedRef.current = "";
   }, []);
 
   const sendMessage = useCallback(

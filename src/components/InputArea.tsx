@@ -69,7 +69,7 @@ export function InputArea({
 
   // ── right button — one slot, three states ────────────────────────────────────
   const RightButton = () => {
-    if (isStreaming) {
+    if (isStreaming || isBusy) {
       return (
         <Tooltip title="Stop generation" placement="top">
           <button

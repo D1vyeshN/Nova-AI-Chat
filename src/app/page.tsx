@@ -94,6 +94,20 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, status]);
 
+  const handleStop = useCallback(() => {
+    // Stop chat streaming/thinking
+    stopStreaming();
+    
+    // Stop voice recording if active
+    stopRecordingIfActive();
+    
+    // Stop TTS playback if active
+    stop();
+    
+    // Reset any other active states
+    setStatus("idle");
+  }, [stopStreaming, stopRecordingIfActive, stop, setStatus]);
+
   const handleSend = useCallback(async () => {
     const text = inputText.trim();
     if (!text || status === "thinking") return;
@@ -159,7 +173,7 @@ export default function ChatPage() {
   };
 
   const { label: statusLabel, color: statusColor } = getStatusDisplay();
-  const isBusy = status === "thinking" || isTranscribing || isStreaming;
+  const isBusy = status === "thinking" || isTranscribing || isStreaming || isRecording || isSpeaking;
 
   return (
     <Suspense fallback={
@@ -240,9 +254,8 @@ export default function ChatPage() {
                     size="small"
                     icon={<DeleteOutlined />}
                     onClick={() => {
-                      stop();
+                      handleStop();
                       clearMessages();
-                      stopRecordingIfActive();
                     }}
                     aria-label="Clear all messages"
                     style={{ color: "var(--nova-muted)" }}
@@ -308,7 +321,7 @@ export default function ChatPage() {
                     setInputText={setInputText}
                     onSend={handleSend}
                     onMic={handleMic}
-                    onStop={stopStreaming}
+                    onStop={handleStop}
                     isRecording={isRecording}
                     isTranscribing={isTranscribing}
                     isStreaming={isStreaming}

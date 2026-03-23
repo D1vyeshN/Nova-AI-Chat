@@ -24,6 +24,7 @@ export interface ApiKeys {
 export type AppStatus =
   | "idle"
   | "thinking"
+  | "streaming"
   | "recording"
   | "transcribing"
   | "speaking"
