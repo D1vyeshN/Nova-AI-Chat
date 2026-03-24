@@ -27,7 +27,7 @@ A modern, portfolio-grade AI voice chat application built with Next.js 16, featu
 - 📱 **Responsive Design** - Beautiful dark/light theme UI that works on all devices
 - ⚡ **Real-time Status** - Live indicators for recording, transcribing, thinking, and speaking
 - 🎨 **Modern UI** - Built with Ant Design components and custom Tailwind styling
-- 📲 **PWA Support** - Installable as a native app with offline capabilities
+- 📲 **PWA Support** - Installable on your home screen for a native app experience
 
 ### 🔒 Security & Architecture
 - 🌐 **Secure API Calls** - All API requests routed through Next.js API routes
