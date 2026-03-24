@@ -12,7 +12,83 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const response = await fetch(
+    // Helper function to get system prompt
+    const getSystemPrompt = () => `You are NOVA, a sharp, friendly, and professional AI assistant. Respond clearly, naturally, and concisely.
+
+## Time Awareness
+- The current date is provided by system. Use it when reasoning about time-sensitive queries.
+
+## Tool Usage (searchWeb)
+
+ALWAYS use searchWeb when:
+- The query involves a year >= current year (e.g., 2025, 2026, etc.)
+- The query includes words like: "latest", "recent", "today", "new", "upcoming"
+- The information could change or may not be in training data
+- You are uncertain or lack confidence
+- The user explicitly asks for latest/current info
+
+Do NOT use searchWeb for:
+- Common knowledge
+- Coding, math, or general explanations
+
+When using searchWeb:
+- Base your answer on retrieved results
+- Reflect up-to-date and verified information
+- Do not fabricate details beyond results
+- Rewrite the user query into a clear and specific search query
+- Example: "i want 2026 data" → "latest South Indian movies 2026 IMDb list"
+
+## Anti-Hallucination Rules (CRITICAL)
+- Never generate or guess names of movies, products, or events if unsure
+- If exact data is required and not known, you MUST use searchWeb
+- If you cannot verify the information, say you are unsure and use searchWeb
+- Do NOT fabricate examples or make up information
+
+If the user query is ambiguous, infer intent from recent context and rewrite it into a clear search query before calling tools.
+
+Never mention tool usage (e.g., "I will search").
+Always return the final answer directly to the user.
+
+## Response Structure
+- For simple questions: respond directly
+- For medium/complex questions: organize into sections
+
+Each section MUST start with:
+emoji + short heading (e.g., ## ✅ Answer, ## 🔍 Explanation)
+
+Optionally include a short, friendly intro before sections.
+
+## Formatting
+- Use clean markdown
+- **bold** for emphasis
+- \`code\` for inline
+- \`\`\`language for code blocks (REQUIRED)
+- Use lists/tables where helpful
+
+## Style
+- Clear, conversational, and professional
+- Avoid verbosity and filler
+- Emojis ONLY in headings
+
+## Behavior
+- Prioritize accuracy and clarity
+- Provide actionable answers
+- Do not hallucinate facts or APIs
+- If unsure, say so clearly
+
+Goal: structured, easy-to-scan, and reliable responses.`;
+
+    // Clean message history to avoid context pollution with hallucinated answers
+    const cleanedMessages = messages.slice(-8); // Keep only last 8 messages
+    
+    // Smart tool router - force tool usage for future data and critical keywords
+    const lastUserMessage = cleanedMessages.filter((m: { role: string; content: string }) => m.role === 'user').pop()?.content || '';
+    const shouldForceTool = /\b(2025|2026|2027|2028|2029|2030)\b|latest|recent|new|upcoming|today|now|current/i.test(lastUserMessage);
+    
+    // console.log("Smart router analysis:", { lastUserMessage, shouldForceTool });
+
+    // Step 1: Tool Detection Phase (Non-Streaming)
+    const detectionResponse = await fetch(
       "https://api.groq.com/openai/v1/chat/completions",
       {
         method: "POST",
@@ -23,112 +99,15 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
           messages: [
-//             {
-//               role: "system",
-//               content: `You are NOVA, a sharp and friendly AI assistant with personality. 
-// Format responses using markdown:
-// - Use \`code\` for inline code and \`\`\`language blocks for code samples
-// - Use **bold** for emphasis and headers where appropriate  
-// - Use bullet points and numbered lists for steps
-// - Use tables for comparisons
-// - Keep responses clear and well structured.
-// Use emojis naturally where they add clarity or warmth — not excessively.
-
-// Always format code blocks with a language tag, e.g. \`\`\`js, \`\`\`ts, \`\`\`bash.
-// For file trees or plain text blocks use \`\`\`text.
-// Never use unlabelled fenced blocks.
-// `,
-//             },
-
-// {
-//   role: "system",
-//   content: `You are NOVA, a helpful AI assistant. Respond clearly, naturally, and concisely.
-
-// ## Structure (REQUIRED)
-// - For non-trivial answers, organize into sections.
-// - Each section MUST start with: emoji + short heading.
-//   Examples:
-//   ## ✅ Answer
-//   ## 🔍 Explanation
-//   ## ⚙️ Steps
-//   ## 💡 Tips
-//   ## ⚠️ Notes
-
-// ## Style
-// - Be conversational, not robotic.
-// - Use short paragraphs and lists when helpful.
-// - No emojis inside text—only in headings.
-
-// ## Behavior
-// - Be accurate and practical.
-// - Ask questions only if needed.
-// - If unsure, say so.
-// - Avoid unsafe or harmful guidance.
-
-// Goal: clear, structured, easy-to-scan answers with emoji headings.`,
-// },
-
-{
-  role: "system",
-  content: `You are NOVA, a sharp and friendly AI assistant with personality. Respond clearly, naturally, and concisely.
-
-- now Date is ${new Date()}.
-
-- Optionally start responses with a short, friendly introductory paragraph before the first section heading, summarizing or setting up the topic in a conversational tone.
-
-## Handling Post-Knowledge Cutoff Queries
-- Your training data ends in 2023. For any query about events after this date, do NOT answer confidently.
-- Instead, explicitly indicate uncertainty and **use searchWeb** to find up-to-date information.
-- Always compare the query date to 'now' and your training cutoff before responding.
-- If unsure then use searchWeb tool to get the latest information and refer to it in your response.
-
-##Use the searchWeb tool ONLY when:
-- ALWAYS for future, ongoing, or recent events
-- You are unsure of the answer
-- The user explicitly asks to search
-
-##Do NOT use the tool for:
-- Common knowledge
-- Coding, math, or explanations
-
-## Structure (REQUIRED, but NOT all sections needed)
-- For non-trivial answers, organize into sections.
-- Each section MUST start with: emoji + short heading.
-  Examples:
-  ## ✅ Answer
-  ## 🔍 Explanation
-  ## ⚙️ Steps
-  ## 💡 Tips
-  ## ⚠️ Notes
-
-## Formatting
-- Use markdown properly:
-  - **bold** for emphasis and headings
-  - \`code\` for inline code
-  - \`\`\`language blocks for all code (ALWAYS include language tag: js, ts, bash, etc.)
-  - \`\`\`text for file trees or plain text
-- Use bullet points, numbered lists, and tables when helpful
-- Never use unlabelled code blocks
-
-## Style
-- Be conversational, clear, and well-structured
-- Avoid robotic tone or unnecessary filler
-- Use emojis naturally in headings; avoid overuse in body text
-
-## Behavior
-- Be accurate and practical
-- Provide actionable answers
-- Ask questions only if needed
-- If unsure, say so
-- Avoid unsafe or harmful guidance
-
-Goal: structured, easy-to-scan, helpful responses with clean markdown and emoji headings.`,
+            {
+              role: "system",
+              content: getSystemPrompt()
             },
-            ...messages,
+            ...cleanedMessages,
           ],
           max_tokens: 2000,
           temperature: 0.7,
-          stream: true,
+          stream: false,
           tools: [
             {
               type: "function",
@@ -148,213 +127,254 @@ Goal: structured, easy-to-scan, helpful responses with clean markdown and emoji 
               },
             },
           ],
-          tool_choice: "auto",
+          tool_choice: shouldForceTool ? {
+            type: "function",
+            function: { name: "searchWeb" }
+          } : "auto",
         }),
-        signal: req.signal, // ✅ Use frontend's abort signal
+        signal: req.signal,
       },
     );
 
-    if (!response.ok) {
-      const err = await response.json();
+    if (!detectionResponse.ok) {
+      const err = await detectionResponse.json();
       return NextResponse.json(
-        { error: err.error?.message || `Groq error: ${response.status}` },
-        { status: response.status },
+        { error: err.error?.message || `Groq error: ${detectionResponse.status}` },
+        { status: detectionResponse.status },
       );
     }
 
-    // Proxy the SSE stream directly to the client
-    const reader = response.body?.getReader();
-    if (!reader) {
-      return NextResponse.json(
-        { error: "No response body from Groq API" },
-        { status: 500 },
-      );
-    }
+    const detectionData = await detectionResponse.json();
+    const toolCall = detectionData.choices?.[0]?.message?.tool_calls;
+    const assistantMessage = detectionData.choices?.[0]?.message;
 
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    
-    const stream = new ReadableStream({
-      async start(controller) {
+    // Step 2: Branch Logic
+    if (toolCall && toolCall.length > 0) {
+      // Tool is needed - Execute tool and stream final answer
+      const toolCallData = toolCall[0];
+      
+      if (toolCallData.function?.name === "searchWeb") {
         try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() ?? "";
-            
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed || !trimmed.startsWith("data: ")) continue;
-              
-              const data = trimmed.slice(6).trim();
-              if (data === "[DONE]") continue;
-              
-              try {
-                const json = JSON.parse(data);
-                
-                // Handle tool calls
-                if (json.choices?.[0]?.delta?.tool_calls) {
-                  const toolCalls = json.choices[0].delta.tool_calls;
-                  
-                  for (const toolCall of toolCalls) {
-                    if (toolCall.function?.name === "searchWeb" && toolCall.function.arguments) {
-                      try {
-                        const args = JSON.parse(toolCall.function.arguments);
-                        const searchResults = await searchWeb({ query: args.query });
-                        
-                        // Send tool call result back to Groq
-                        const toolResponse = {
-                          role: "tool",
-                          content: searchResults,
-                          tool_call_id: toolCall.id,
-                        };
-                        
-                        // Continue conversation with search results
-                        const followUpResponse = await fetch(
-                          "https://api.groq.com/openai/v1/chat/completions",
-                          {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/json",
-                              Authorization: `Bearer ${apiKey}`,
-                            },
-                            body: JSON.stringify({
-                              model: "llama-3.3-70b-versatile",
-                              messages: [
-                                {
-                                  role: "system",
-                                  content: `You are NOVA, a sharp and friendly AI assistant with personality. Respond clearly, naturally, and concisely.
-
-now is ${new Date()}
-
-##Use the searchWeb tool ONLY when:
-- ALWAYS for future, ongoing, or recent events
-- You are unsure of the answer
-- The user explicitly asks to search
-
-##Do NOT use the tool for:
-- Common knowledge
-- Coding, math, or explanations
-
--Optionally start responses with a short, friendly introductory paragraph before the first section heading, summarizing or setting up the topic in a conversational tone.
-
-## Structure (REQUIRED)
-- For non-trivial answers, organize into sections.
-- Each section MUST start with: emoji + short heading.
-  Examples:
-  ## ✅ Answer
-  ## 🔍 Explanation
-  ## ⚙️ Steps
-  ## 💡 Tips
-  ## ⚠️ Notes
-
-## Formatting
-- Use markdown properly:
-  - **bold** for emphasis and headings
-  - \`code\` for inline code
-  - \`\`\`language blocks for all code (ALWAYS include language tag: js, ts, bash, etc.)
-  - \`\`\`text for file trees or plain text
-- Use bullet points, numbered lists, and tables when helpful
-- Never use unlabelled code blocks
-
-## Style
-- Be conversational, clear, and well-structured
-- Avoid robotic tone or unnecessary filler
-- Use emojis naturally in headings; avoid overuse in body text
-
-## Behavior
-- Be accurate and practical
-- Provide actionable answers
-- Ask questions only if needed
-- If unsure, say so
-- Avoid unsafe or harmful guidance
-
-Goal: structured, easy-to-scan, helpful responses with clean markdown and emoji headings.`,
-                                },
-                                ...messages,
-                                toolResponse,
-                              ],
-                              max_tokens: 2000,
-                              temperature: 0.7,
-                              stream: true,
-                            }),
-                            signal: req.signal,
-                          }
-                        );
-                        
-                        if (!followUpResponse.ok) {
-                          throw new Error(`Follow-up request failed: ${followUpResponse.status}`);
-                        }
-                        
-                        const followUpReader = followUpResponse.body?.getReader();
-                        if (!followUpReader) {
-                          throw new Error("No follow-up response body");
-                        }
-                        
-                        // Stream the follow-up response
-                        let followUpBuffer = "";
-                        while (true) {
-                          const { done: followUpDone, value: followUpValue } = await followUpReader.read();
-                          if (followUpDone) break;
-                          
-                          followUpBuffer += decoder.decode(followUpValue, { stream: true });
-                          const followUpLines = followUpBuffer.split("\n");
-                          followUpBuffer = followUpLines.pop() ?? "";
-                          
-                          for (const followUpLine of followUpLines) {
-                            controller.enqueue(encoder.encode(followUpLine + "\n"));
-                          }
-                        }
-                        
-                        followUpReader.releaseLock();
-                        return; // Exit after handling tool call
-                        
-                      } catch (error) {
-                        console.error("Error executing searchWeb:", error);
-                        // Continue with original stream if tool call fails
-                      }
-                    }
-                  }
-                }
-                
-                // Pass through regular content
-                controller.enqueue(encoder.encode(line + "\n"));
-                
-              } catch (parseError) {
-                // Skip malformed JSON
-                console.warn("Failed to parse SSE chunk:", parseError);
-                controller.enqueue(encoder.encode(line + "\n"));
-              }
-            }
+          // Validate JSON arguments before parsing
+          let parsedArgs;
+          try {
+            parsedArgs = JSON.parse(toolCallData.function.arguments || "{}");
+          } catch (parseError) {
+            console.error("Failed to parse tool arguments:", parseError);
+            return NextResponse.json(
+              { error: "Invalid tool arguments format" },
+              { status: 400 }
+            );
           }
-        } catch (error) {
-          console.log(
-            "Stream ended:",
-            error instanceof Error ? error.message : "Unknown error",
-          );
-        } finally {
-          reader.releaseLock();
-          controller.close();
-        }
-      },
-      cancel() {
-        console.log("Client disconnected from stream");
-        reader.releaseLock();
-      },
-    });
 
-    return new NextResponse(stream, {
-      headers: {
-        "Content-Type": "text/event-stream",
-        "Cache-Control": "no-cache, no-transform",
-        Connection: "keep-alive",
-        "X-Accel-Buffering": "no",
-      },
-    });
+          if (!parsedArgs.query) {
+            return NextResponse.json(
+              { error: "Missing required query parameter" },
+              { status: 400 }
+            );
+          }
+
+          // console.log("Executing searchWeb with args:", parsedArgs);
+          
+          const searchResults = await searchWeb({ query: parsedArgs.query });
+          // console.log("Search results:", searchResults);
+          
+          // Step 3: Stream final answer with tool results
+          const continuationResponse = await fetch(
+            "https://api.groq.com/openai/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey}`,
+              },
+              body: JSON.stringify({
+                model: "llama-3.3-70b-versatile",
+                messages: [
+                  {
+                    role: "system",
+                    content: getSystemPrompt()
+                  },
+                  ...cleanedMessages,
+                  {
+                    role: "assistant",
+                    content: assistantMessage?.content || "",
+                    tool_calls: [
+                      {
+                        id: toolCallData.id,
+                        type: "function",
+                        function: {
+                          name: "searchWeb",
+                          arguments: toolCallData.function.arguments
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    role: "tool",
+                    content: searchResults,
+                    tool_call_id: toolCallData.id,
+                  },
+                ],
+                max_tokens: 2000,
+                temperature: 0.7,
+                stream: true,
+              }),
+              signal: req.signal,
+            }
+          );
+          
+          if (!continuationResponse.ok) {
+            throw new Error(`Continuation failed: ${continuationResponse.status}`);
+          }
+          
+          // Stream the response directly
+          const reader = continuationResponse.body?.getReader();
+          if (!reader) {
+            throw new Error("No continuation response body");
+          }
+          
+          const encoder = new TextEncoder();
+          const decoder = new TextDecoder();
+          
+          const stream = new ReadableStream({
+            async start(controller) {
+              try {
+                while (true) {
+                  const { done, value } = await reader.read();
+                  if (done) break;
+                  
+                  controller.enqueue(encoder.encode(decoder.decode(value, { stream: true })));
+                }
+              } catch (error) {
+                console.error("Streaming error:", error);
+                const errorResponse = `data: ${JSON.stringify({
+                  choices: [{
+                    delta: {
+                      content: "I encountered an error while processing the search results. Please try again."
+                    }
+                  }]
+                })}\n\n`;
+                controller.enqueue(encoder.encode(errorResponse));
+              } finally {
+                reader.releaseLock();
+                controller.close();
+              }
+            },
+            cancel() {
+              console.log("Client disconnected from continuation stream");
+              reader.releaseLock();
+            },
+          });
+          
+          return new NextResponse(stream, {
+            headers: {
+              "Content-Type": "text/event-stream",
+              "Cache-Control": "no-cache, no-transform",
+              Connection: "keep-alive",
+              "X-Accel-Buffering": "no",
+            },
+          });
+          
+        } catch (error) {
+          console.error("Tool execution error:", error);
+          return NextResponse.json(
+            { error: `Tool execution failed: ${error instanceof Error ? error.message : "Unknown error"}` },
+            { status: 500 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: `Unknown tool: ${toolCallData.function?.name}` },
+          { status: 400 }
+        );
+      }
+    } else {
+      // No tool needed - Stream the response directly
+      const streamResponse = await fetch(
+        "https://api.groq.com/openai/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: [
+              {
+                role: "system",
+                content: getSystemPrompt()
+              },
+              ...cleanedMessages,
+            ],
+            max_tokens: 2000,
+            temperature: 0.7,
+            stream: true,
+          }),
+          signal: req.signal,
+        }
+      );
+      
+      if (!streamResponse.ok) {
+        const err = await streamResponse.json();
+        return NextResponse.json(
+          { error: err.error?.message || `Groq error: ${streamResponse.status}` },
+          { status: streamResponse.status },
+        );
+      }
+      
+      // Stream the response directly
+      const reader = streamResponse.body?.getReader();
+      if (!reader) {
+        return NextResponse.json(
+          { error: "No response body from Groq API" },
+          { status: 500 },
+        );
+      }
+      
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+      
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              
+              controller.enqueue(encoder.encode(decoder.decode(value, { stream: true })));
+            }
+          } catch (error) {
+            console.error("Streaming error:", error);
+            const errorResponse = `data: ${JSON.stringify({
+              choices: [{
+                delta: {
+                  content: "I encountered an error while generating my response. Please try again."
+                }
+              }]
+            })}\n\n`;
+            controller.enqueue(encoder.encode(errorResponse));
+          } finally {
+            reader.releaseLock();
+            controller.close();
+          }
+        },
+        cancel() {
+          console.log("Client disconnected from stream");
+          reader.releaseLock();
+        },
+      });
+      
+      return new NextResponse(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache, no-transform",
+          Connection: "keep-alive",
+          "X-Accel-Buffering": "no",
+        },
+      });
+    }
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });

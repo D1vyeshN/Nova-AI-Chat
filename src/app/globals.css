@@ -24,7 +24,7 @@
   --font-size-3xl: 30px;
   --font-size-4xl: 36px;
   
-  --animate-pulse-slow: pulse 3s ease-in-out infinite;
+  --animate-pulse-slow: pulse 2s ease-in-out infinite;
   --animate-float: float 3s ease-in-out infinite;
   --animate-typing: typing 1.2s ease infinite;
 }

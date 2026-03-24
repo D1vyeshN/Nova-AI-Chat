@@ -2,16 +2,20 @@
 
 import { useState, useCallback, useRef } from "react";
 import { Message, AppStatus } from "@/types";
+import { allVoices } from "@/utils/voices";
 
 export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [status, setStatus] = useState<AppStatus>("idle");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+  const [optimalVoiceName, setOptimalVoiceName] = useState<string | null>(null);
 
   const messagesRef = useRef<Message[]>([]);
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamingDomRef = useRef<HTMLSpanElement | null>(null);
   const accumulatedRef = useRef<string>("");
+  const onLanguageDetectedRef = useRef<((language: string, messageId: string) => void) | null>(null);
 
   // ── Typing queue ─────────────────────────────────────────────────────────────
   const charQueueRef = useRef<string[]>([]);
@@ -140,13 +144,14 @@ export function useChat() {
 
           try {
             const json = JSON.parse(data);
-            const delta = json.choices?.[0]?.delta?.content;
-            if (!delta) return;
+            const delta = json.choices?.[0]?.delta;
+            const content = delta?.content;
+            if (!content) return;
 
-            accumulatedRef.current += delta;
+            accumulatedRef.current += content;
 
             // push chars to queue
-            charQueueRef.current.push(...delta.split(""));
+            charQueueRef.current.push(...content.split(""));
 
             if (!hasStartedStreaming) {
               hasStartedStreaming = true;
@@ -201,6 +206,29 @@ export function useChat() {
           return next;
         });
 
+        // Trigger language detection when streaming completes
+        if (aiMsgId && accumulatedRef.current) {
+          (async () => {
+            try {
+              const { loadModule } = await import("cld3-asm");
+              const cldFactory = await loadModule();
+              const identifier = cldFactory.create();
+              const result = identifier.findMostFrequentLanguages(accumulatedRef.current, 2);
+              const detectedLang = result?.[0]?.language;
+              if (detectedLang) {
+                setDetectedLanguage(detectedLang);
+                
+                // Find best voice for detected language
+                const detectedVoice = allVoices.find((v) => v.language.startsWith(detectedLang));
+                const optimalVoiceName = detectedVoice?.name || "en-US-AvaMultilingualNeural";
+                setOptimalVoiceName(optimalVoiceName);
+              }
+            } catch (error) {
+              console.warn("Language detection failed:", error);
+            }
+          })();
+        }
+
         setIsStreaming(false);
         streamingDomRef.current = null;
         abortControllerRef.current = null;
@@ -247,6 +275,8 @@ export function useChat() {
             )
           );
         }
+        console.log("Error occurred:", errMessage);
+        
         setIsStreaming(false);
         setStatus("error");
         streamingDomRef.current = null;
@@ -339,11 +369,14 @@ export function useChat() {
 
         try {
           const json = JSON.parse(data);
-          const delta = json.choices?.[0]?.delta?.content;
-          if (!delta) return;
+          const delta = json.choices?.[0]?.delta;
+          const content = delta?.content;
+          if (!content) return;
 
-          accumulatedRef.current += delta;
-          charQueueRef.current.push(...delta.split(""));
+          accumulatedRef.current += content;
+
+          // push chars to queue
+          charQueueRef.current.push(...content.split(""));
 
           if (!hasStartedStreaming) {
             hasStartedStreaming = true;
@@ -438,18 +471,24 @@ export function useChat() {
         );
       }
       setIsStreaming(false);
-      setStatus("error");
+      setStatus("idle"); 
       streamingDomRef.current = null;
       abortControllerRef.current = null;
       return null;
     }
   }, [stopStreaming]);
 
+  const setLanguageDetectionCallback = useCallback((callback: (language: string, messageId: string) => void) => {
+    onLanguageDetectedRef.current = callback;
+  }, []);
+
   return {
     messages,
     status,
     setStatus,
     isStreaming,
+    detectedLanguage,
+    optimalVoiceName,
     sendMessage,
     clearMessages,
     stopStreaming,
@@ -457,5 +496,6 @@ export function useChat() {
     updateMessage,
     editMessage,
     regenerateResponse,
+    setLanguageDetectionCallback,
   };
-}
+};

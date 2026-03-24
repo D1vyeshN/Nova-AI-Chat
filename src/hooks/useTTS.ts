@@ -105,11 +105,12 @@ function stripToSpeakable(text: string): string {
   );
 }
 
-export function useTTS(selectedVoice?: Voice) {
+export function useTTS(selectedVoice?: Voice, voiceName?: string) {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isVoiceStreaming, setIsVoiceStreaming] = useState(false);
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
 
   // refs to avoid stale closures
   const isSpeakingRef = useRef(false);
@@ -158,7 +159,7 @@ export function useTTS(selectedVoice?: Voice) {
 
   // ── OpenAI Edge TTS with Direct Audio Streaming ───────────────────────────
   const speakWithOpenAI = useCallback(
-    async (text: string, messageId: string) => {
+    async (text: string, messageId: string, voiceName?: string) => {
       const clean = stripToSpeakable(text);
       if (!clean) return;
 
@@ -173,45 +174,10 @@ export function useTTS(selectedVoice?: Voice) {
       setIsSpeaking(true);
       setPlayingId(messageId);
 
-      // Use default voice immediately for faster response
-      let voiceToUse = selectedVoice?.name || "en-US-AvaMultilingualNeural";
+      // Use voiceName when available, fallback to selected/default voice
+      let voiceToUse = voiceName || selectedVoice?.name || "en-US-AvaMultilingualNeural";
 
       try {
-        // Start language detection asynchronously (non-blocking)
-        const languageDetectionPromise = (async () => {
-          try {
-            // Check cache first
-            const cacheKey = clean.substring(0, 100); // Use first 100 chars as cache key
-            if (languageCache.has(cacheKey)) {
-              const cachedVoice = languageCache.get(cacheKey);
-              if (cachedVoice) {
-                const detectedVoice = allVoices.find((v) => v.name === cachedVoice);
-                return detectedVoice?.name || voiceToUse;
-              }
-            }
-
-            const identifier = await getLanguageDetector();
-            const result = identifier.findMostFrequentLanguages(clean, 2);
-            const detectedVoice = allVoices.find((v) => v.language.startsWith(result?.[0]?.language));
-            const optimalVoice = detectedVoice?.name || voiceToUse;
-
-            // Cache the result
-            if (languageCache.size >= MAX_CACHE_SIZE) {
-              // Remove oldest entry (first in Map)
-              const firstKey = languageCache.keys().next().value;
-              if (firstKey) {
-                languageCache.delete(firstKey);
-              }
-            }
-            languageCache.set(cacheKey, optimalVoice);
-
-            return optimalVoice;
-          } catch (error) {
-            console.warn("Language detection failed, using default voice:", error);
-            return voiceToUse;
-          }
-        })();
-
         const response = await fetch("/api/tts", {
           method: "POST",
           headers: {
@@ -264,19 +230,6 @@ export function useTTS(selectedVoice?: Voice) {
 
         setIsLoading(false);
         await audio.play();
-
-        // Check if language detection found a better voice
-        try {
-          const optimalVoice = await languageDetectionPromise;
-          if (optimalVoice !== voiceToUse && audioRef.current) {
-            console.log(`Switching to better voice: ${optimalVoice}`);
-            // Optional: Restart with better voice for future optimization
-            // For now, continue with current audio to avoid interruption
-          }
-        } catch (error) {
-          // Language detection failed, but audio is already playing
-          console.warn("Language detection failed after audio start");
-        }
         
       } catch (error) {
         // Don't log error if it was an intentional abort
@@ -293,7 +246,7 @@ export function useTTS(selectedVoice?: Voice) {
         setIsVoiceStreaming(false);
       }
     },
-    [stop, selectedVoice],
+    [stop, selectedVoice?.name],
   );
 
   // ── Main speak function (uses OpenAI Edge TTS) ──────────────────────────
@@ -310,9 +263,9 @@ export function useTTS(selectedVoice?: Voice) {
       if (!clean) return;
 
       // Use OpenAI Edge TTS
-      await speakWithOpenAI(clean, messageId);
+      await speakWithOpenAI(clean, messageId, voiceName);
     },
-    [stop, speakWithOpenAI],
+    [stop, speakWithOpenAI, voiceName],
   );
 
   // Cleanup on unmount
@@ -329,5 +282,7 @@ export function useTTS(selectedVoice?: Voice) {
     stop,
     isLoading,
     isVoiceStreaming,
+    detectedLanguage,
+    setDetectedLanguage,
   };
 }

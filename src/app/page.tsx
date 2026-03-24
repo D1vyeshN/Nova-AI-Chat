@@ -78,6 +78,8 @@ export default function ChatPage() {
     updateMessage,
     editMessage,
     regenerateResponse,
+    optimalVoiceName,
+    detectedLanguage,
   } = useChat();
   const { isRecording, isTranscribing, startRecording, stopRecording, stopRecordingIfActive } = useSTT();
   const { 
@@ -86,13 +88,22 @@ export default function ChatPage() {
     isLoading,
     isVoiceStreaming,
     speak, 
-    stop
-  } = useTTS(selectedVoice);
+    stop,
+    detectedLanguage: ttsDetectedLanguage,
+    setDetectedLanguage
+  } = useTTS(selectedVoice, optimalVoiceName as string);
 
   // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, status]);
+
+  // Sync detected language from useChat to useTTS
+  useEffect(() => {
+    if (detectedLanguage) {
+      setDetectedLanguage(detectedLanguage);
+    }
+  }, [detectedLanguage, setDetectedLanguage]);
 
   const handleStop = useCallback(() => {
     // Stop chat streaming/thinking
@@ -173,7 +184,7 @@ export default function ChatPage() {
   };
 
   const { label: statusLabel, color: statusColor } = getStatusDisplay();
-  const isBusy = status === "thinking" || isTranscribing || isStreaming || isRecording || isSpeaking;
+  const isBusy = status === "thinking" || isTranscribing || isStreaming || isRecording;
 
   return (
     <Suspense fallback={
@@ -205,7 +216,7 @@ export default function ChatPage() {
                 className="absolute inset-0"
                 style={{
                   background: `
-                    radial-gradient(ellipse 60% 40% at 10% 0%, rgba(0,229,255,0.04) 0%, transparent 60%),
+                    radial-gradient(ellipse 60% 40% at 10% 0%, rgba(0,229,255,0.05) 0%, transparent 60%),
                     radial-gradient(ellipse 50% 50% at 90% 100%, rgba(124,58,237,0.05) 0%, transparent 60%)
                   `,
                 }}
@@ -227,8 +238,8 @@ export default function ChatPage() {
                 >
                   <Image src="/icons/logo-nova.svg" alt="Nova AI" width={32} height={32} preview={false}/>
                 </div>
-                <span className="font-display text-lg font-extrabold tracking-widest">
-                  NO<span className="text-nova-accent">VA</span>
+                <span className="font-display text-[20px] font-extrabold tracking-widest">
+                  NOVA
                 </span>
               </div>
 
@@ -266,7 +277,7 @@ export default function ChatPage() {
             </header>
 
             {/* ===== MAIN CONTENT ===== */}
-            <div className="flex-1 flex justify-center relative z-10 max-h-[calc(100vh-60px)]">
+            <div className="flex-1 flex justify-center relative z-10 max-h-[calc(100vh-60px)] ">
               <div className="w-full max-w-4xl flex flex-col h-full">
                 {/* ===== MESSAGES ===== */}
                 <div
