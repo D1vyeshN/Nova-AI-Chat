@@ -1,42 +1,8 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { loadModule } from "cld3-asm";
 import { Voice } from "@/types";
-import { allVoices } from "@/utils/voices";
 
-// Cache for language detection module
-let cldModuleCache: any = null;
-let cldModuleLoading = false;
-
-// Simple cache for detected languages (last 50 texts)
-const languageCache = new Map<string, string>();
-const MAX_CACHE_SIZE = 50;
-
-// Helper function to get cached language detector
-async function getLanguageDetector() {
-  if (cldModuleCache) return cldModuleCache;
-  
-  if (!cldModuleLoading) {
-    cldModuleLoading = true;
-    try {
-      const cldFactory = await loadModule();
-      cldModuleCache = cldFactory.create();
-    } catch (error) {
-      console.error("Failed to load language detection module:", error);
-      throw error;
-    } finally {
-      cldModuleLoading = false;
-    }
-  }
-  
-  // Wait for loading to complete if it was in progress
-  while (cldModuleLoading) {
-    await new Promise(resolve => setTimeout(resolve, 10));
-  }
-  
-  return cldModuleCache;
-}
 
 // ── strip everything except plain speakable text ──────────────────────────────
 function stripToSpeakable(text: string): string {
@@ -184,6 +150,7 @@ export function useTTS(selectedVoice?: Voice, voiceName?: string) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            model:"gpt-4o-mini-tts",
             input: clean,
             voice: voiceToUse,
             response_format: "mp3",

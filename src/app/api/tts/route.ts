@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { input, voice = 'en-US-AnaNeural', response_format = 'mp3', speed = 1.0 } = body;
+    const { input, voice = 'en-US-AnaNeural', response_format = 'mp3', speed = 1.0,model="gpt-4o-mini-tts" } = body;
 
     // Get API configuration from environment variables
     const ttsUrl = process.env.TTS_URL || 'https://openai-edge-tts-uzqw.onrender.com';
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        model:"gpt-4o-mini-tts",
         input,
         voice,
         response_format,
