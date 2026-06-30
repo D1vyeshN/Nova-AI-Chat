@@ -217,21 +217,21 @@ export function InputArea({
           </div>
         ) : (
           /* ── normal textarea ── */
-          <textarea
-            ref={textareaRef}
-            value={inputText}
-            name="input-text"
-            onChange={(e) => setInputText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type a message or press the mic..."
-            disabled={isBusy}
-            rows={1}
-            className="w-full h-full border-none bg-transparent outline-none resize-none disabled:opacity-50 p-2 placeholder:text-nova-muted"
-            style={{
-              color: "var(--nova-text)",
-              fontFamily: "'Syne', sans-serif",
-              fontSize: 14,
-              // padding: "17px 14px",
+            <textarea
+              ref={textareaRef}
+              value={inputText}
+              name="input-text"
+              onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message or press the mic..."
+              disabled={isBusy || isTranscribing}
+              rows={1}
+              className="w-full h-full border-none bg-transparent outline-none resize-none disabled:opacity-50 p-2 placeholder:text-nova-muted"
+              style={{
+                color: "var(--nova-text)",
+                fontFamily: "'Syne', sans-serif",
+                fontSize: 14,
+                // padding: "17px 14px",
               lineHeight: "1.5",
               minHeight: "40px",
               maxHeight: "260px",

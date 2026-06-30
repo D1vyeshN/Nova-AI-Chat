@@ -25,6 +25,8 @@ import { useChat } from "@/hooks/useChat";
 import { useSTT } from "@/hooks/useSTT";
 import { useTTS } from "@/hooks/useTTS";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { InputArea } from "@/components/InputArea";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 // Dynamic imports for code splitting
 const MessageBubble = dynamic(() => import("@/components/MessageBubble").then(mod => ({ default: mod.MessageBubble })), {
@@ -42,19 +44,12 @@ const WelcomeScreen = dynamic(() => import("@/components/WelcomeScreen").then(mo
   ssr: false
 });
 
-const InputArea = dynamic(() => import("@/components/InputArea").then(mod => ({ default: mod.InputArea })), {
-  loading: () => <div className="animate-pulse bg-nova-surface rounded-lg h-20" />,
-  ssr: false
-});
 
 const ThemeSwitcher = dynamic(() => import("@/components/ThemeSwitcher").then(mod => ({ default: mod.ThemeSwitcher })), {
   loading: () => null,
   ssr: false
 });
 
-const ThemeProvider = dynamic(() => import("@/contexts/ThemeContext").then(mod => ({ default: mod.ThemeProvider })), {
-  ssr: false
-});
 
 const { TextArea } = Input;
 
@@ -105,19 +100,31 @@ export default function ChatPage() {
     }
   }, [detectedLanguage, setDetectedLanguage]);
 
-  const handleStop = useCallback(() => {
+  const handleStop = useCallback(async () => {
     // Stop chat streaming/thinking
     stopStreaming();
     
-    // Stop voice recording if active
-    stopRecordingIfActive();
+    // Stop voice recording if active and get transcribed text
+    if (isRecording) {
+      try {
+        const text = await stopRecording();
+        console.log('Transcribed text from handleStop:', text);
+        if (text?.trim()) {
+          setInputText(text);
+        }
+      } catch (err) {
+        console.error('Error stopping recording in handleStop:', err);
+      }
+    } else {
+      stopRecordingIfActive();
+    }
     
     // Stop TTS playback if active
     stop();
     
     // Reset any other active states
     setStatus("idle");
-  }, [stopStreaming, stopRecordingIfActive, stop, setStatus]);
+  }, [stopStreaming, stopRecordingIfActive, stop, setStatus, isRecording, setInputText]);
 
   const handleSend = useCallback(async () => {
     const text = inputText.trim();
@@ -139,8 +146,8 @@ export default function ChatPage() {
         const text = await stopRecording();
         if (text?.trim()) {
           setInputText(text);
-          await sendMessage(text);
-          setInputText("");
+          // await sendMessage(text);
+          // setInputText("");
         } else {
           api.warning({
             message: "No speech detected",
@@ -187,12 +194,7 @@ export default function ChatPage() {
   const isBusy = status === "thinking" || isTranscribing || isStreaming || isRecording;
 
   return (
-    <Suspense fallback={
-      <div className="h-screen flex items-center justify-center bg-nova-bg">
-        <div className="animate-pulse text-nova-accent">Loading NOVA...</div>
-      </div>
-    }>
-      <ThemeProvider>
+    <ThemeProvider>
         <ConfigProvider
           theme={{
             algorithm: theme.darkAlgorithm,
@@ -326,7 +328,6 @@ export default function ChatPage() {
                 </div>
 
                 {/* ===== INPUT AREA ===== */}
-                <Suspense fallback={<div className="animate-pulse bg-nova-surface rounded-lg h-20" />}>
                   <InputArea
                     inputText={inputText}
                     setInputText={setInputText}
@@ -338,12 +339,10 @@ export default function ChatPage() {
                     isStreaming={isStreaming}
                     isBusy={isBusy}
                   />
-                </Suspense>
               </div>
             </div>
           </div>
         </ConfigProvider>
       </ThemeProvider>
-    </Suspense>
   );
 }
