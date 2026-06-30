@@ -73,7 +73,7 @@
     --font-weight-bold: 700;
     
     /* Nova AI Dark Theme Variables (Default) */
-    --nova-bg: #080b0f;
+    --nova-bg: #131a24;
     --nova-surface: #0e1117;
     --nova-surface2: #141820;
     --nova-border: #1e2530;
@@ -87,11 +87,11 @@
 
   .light {
     /* Nova AI Light Theme Variables */
-    --nova-bg: #ffffff;
+    --nova-bg: #f0f8ff;
     --nova-surface: #f8fafc;
     --nova-surface2: #f1f5f9;
     --nova-border: #e2e8f0;
-    --nova-accent: #0ea5e9;
+    --nova-accent: #00e5ff;
     --nova-accent2: #7c3aed;
     --nova-accent3: #10b981;
     --nova-text: #0f172a;
